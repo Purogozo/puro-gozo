@@ -29,6 +29,7 @@ export function SelectScreen({
   const [selected, setSelected] = useState<string[]>(
     Array.isArray(stored) ? stored : stored ? [stored as string] : []
   );
+  const [echo, setEcho] = useState<string | null>(null);
 
   function choose(id: string) {
     if (multi) {
@@ -40,7 +41,13 @@ export function SelectScreen({
     setSelected([id]);
     setAnswer(screen.id, id);
     trackEvent("option_select", { screen: screen.id, option: id });
-    if (!hasReassurance) {
+    if (hasReassurance) return; // o fluxo de acolhimento avança manualmente
+    const opt = content.options?.find((o) => o.id === id);
+    if (opt?.echo) {
+      // micro-recompensa de auto-relevância antes de avançar
+      setEcho(opt.echo);
+      window.setTimeout(() => next(), reduced ? 700 : 2100);
+    } else {
       // auto-advance com micro-delay para "sentir" a escolha
       window.setTimeout(() => next(), reduced ? 120 : 420);
     }
@@ -79,6 +86,20 @@ export function SelectScreen({
           </Item>
         ))}
 
+        {/* rede de segurança ANTES das opções (T10, protege a entrada do pico) */}
+        {content.safety && (
+          <Item>
+            <p
+              className={`flex items-center gap-2 font-sans text-[0.86rem] italic ${
+                dark ? "text-rose-suave/90" : "text-vinho"
+              }`}
+            >
+              <span aria-hidden>🤍</span>
+              {content.safety}
+            </p>
+          </Item>
+        )}
+
         <div className="mt-1 flex flex-col gap-3">
           {content.options?.map((opt, i) => (
             <Item key={opt.id}>
@@ -93,6 +114,26 @@ export function SelectScreen({
             </Item>
           ))}
         </div>
+
+        {/* eco de auto-relevância após a escolha (T2) */}
+        <AnimatePresence>
+          {echo && (
+            <motion.p
+              key="echo"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: DIARY }}
+              className={`flex items-start gap-2 rounded-2xl px-4 py-3 font-serif text-[0.98rem] italic leading-snug ${
+                dark ? "bg-white/[0.06] text-rose-suave" : "bg-[#f7e7eb] text-vinho"
+              }`}
+            >
+              <span className="not-italic text-rose" aria-hidden>
+                ✓
+              </span>
+              {echo}
+            </motion.p>
+          )}
+        </AnimatePresence>
 
         {/* microcopy de privacidade */}
         {content.microcopy && (

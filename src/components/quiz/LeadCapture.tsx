@@ -50,7 +50,7 @@ export function LeadCapture({
           Pra onde eu envio o seu plano?
         </h2>
         <p className="mt-2 font-sans text-[0.9rem] leading-relaxed text-lavanda" style={{ fontWeight: 300 }}>
-          Seu diagnóstico e a próxima etapa vão pro seu e-mail. Discreto e privado — só você vê.
+          Seu diagnóstico e a próxima etapa vão pro seu e-mail. Discreto e privado, só você vê.
         </p>
 
         <div className="mt-5 flex flex-col gap-3">

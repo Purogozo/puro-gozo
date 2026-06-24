@@ -24,6 +24,7 @@ export interface Option {
   label: string;
   sublabel?: string;
   profile?: Profile; // usado na T13 para calcular perfilDominante
+  echo?: string; // micro-recompensa de auto-relevância ao escolher (T2)
 }
 
 export interface ScreenContent {
@@ -34,7 +35,8 @@ export interface ScreenContent {
   options?: Option[];
   cta?: string;
   microcopy?: string; // selo de privacidade / nota de rodapé
-  reassurance?: string; // bloco "Respira..." de acolhimento
+  safety?: string; // rede de segurança ANTES das opções (T10)
+  reassurance?: string; // bloco "Respira..." de acolhimento (depois)
 }
 
 export interface Screen {

@@ -1,5 +1,5 @@
 // ============================================================
-// PURO GOZO · COPY DAS 20 TELAS  (fonte única — edite aqui)
+// PURO GOZO · COPY DAS 20 TELAS  (fonte única, edite aqui)
 // Use a copy EXATAMENTE como aprovada. Não suavizar.
 // ============================================================
 import type { Screen, ScreenContent, Path, Profile, ProfileInfo } from "./types";
@@ -17,7 +17,7 @@ export const PROFILES: Record<Profile, ProfileInfo> = {
     name: "A que Aprendeu a se Calar",
     camada: "Camada 2 · O Silêncio",
     diagnosis:
-      "Em algum momento você parou de pedir o que queria. Calar doía menos — e virou prisão.",
+      "Em algum momento você parou de pedir o que queria. Calar doía menos, e virou prisão.",
   },
   desconexao: {
     key: "desconexao",
@@ -42,8 +42,6 @@ export const SCREENS: Screen[] = [
       subhead:
         "Uma avaliação de 2 minutos, criada por uma sexóloga, que identifica por que você perdeu a vontade de transar e te mostra o caminho pra voltar a sentir prazer de verdade, sozinha ou na cama com alguém.",
       cta: "COMEÇAR MINHA AVALIAÇÃO",
-      microcopy:
-        "Leva menos de 3 minutos • 100% privado • Ninguém vê suas respostas",
     },
   },
 
@@ -58,10 +56,26 @@ export const SCREENS: Screen[] = [
       subhead:
         "Em cada fase da vida o desejo sexual some por um motivo diferente. Sua resposta diz onde o seu travou.",
       options: [
-        { id: "29-", label: "Menos de 29 anos" },
-        { id: "29-39", label: "Entre 29 e 39 anos" },
-        { id: "40-49", label: "Entre 40 e 49 anos" },
-        { id: "50+", label: "50 anos ou mais" },
+        {
+          id: "29-",
+          label: "Menos de 29 anos",
+          echo: "Antes dos 29, o desejo raramente vem pronto, ele é aprendido. Dá pra começar certo.",
+        },
+        {
+          id: "29-39",
+          label: "Entre 29 e 39 anos",
+          echo: "Entre 29 e 39, o desejo costuma travar no acúmulo: rotina, cobrança, cabeça cheia.",
+        },
+        {
+          id: "40-49",
+          label: "Entre 40 e 49 anos",
+          echo: "Dos 40 aos 49 o desejo não morre, ele é silenciado. Faz sentido você estar aqui.",
+        },
+        {
+          id: "50+",
+          label: "50 anos ou mais",
+          echo: "Aos 50+, ninguém te disse, mas o tesão não tem prazo de validade. Tem é camada por cima.",
+        },
       ],
     },
   },
@@ -96,12 +110,11 @@ export const SCREENS: Screen[] = [
       eyebrow: "Quem te acompanha",
       headline: "Quem vai te mostrar como reacender a sua chama",
       body: [
-        "Eu sou Andreia Fiamoncini, psicóloga e sexóloga. E durante anos eu fiz exatamente o que me ensinaram: eu fingi.",
-        "Fingi gozo. Gemia, fazia a cena toda, pra ele achar que eu tinha chegado lá. Inventava dor de cabeça, sono, cansaço, pra não transar — e quando ele desistia e virava pro outro lado, eu sentia alívio. E no fundo tinha uma certeza que me corroía por dentro: eu sou fria. Tem alguma coisa errada comigo.",
-        "E demorou tempo demais pra eu descobrir isso.",
-        "O meu desejo nunca foi embora. Ele só foi sendo coberto — camada por camada — por tudo que puseram em mim antes de eu poder discordar. A religião dizendo que era pecado. A minha mãe dizendo que mulher direita não pode se relacionar com qualquer um. O recado, repetido a vida toda, de que sexo era obrigação minha e prazer era problema dele.",
-        "Quando eu comecei a tirar essas camadas, uma por uma, a mulher que apareceu não era uma versão melhorada de mim. Era uma mulher que eu nunca tinha conhecido — que sente tesão, que pede, que goza sem pedir licença. E ela sempre esteve ali, embaixo de tudo.",
-        "Eu chamo o que tira essas camadas de Método das 3 Camadas. É o que essa avaliação começa a fazer com você agora.",
+        "Sou Andreia Fiamoncini, psicóloga e sexóloga. E eu já fiz o que muitas de vocês fazem: eu fingi.",
+        "Fingi gozo. Inventei dor de cabeça, sono, cansaço pra não transar e sentia alívio. No fundo, achava que tinha algo errado comigo.",
+        "Não tinha. Meu desejo nunca foi embora, só foi sendo coberto, camada por camada, por tudo que puseram na gente antes de a gente poder discordar.",
+        "Quando comecei a tirar essas camadas, apareceu uma mulher que eu nunca tinha conhecido: que sente tesão, que pede, que goza sem pedir licença. E ela sempre esteve ali, embaixo de tudo.",
+        "Isso é o Método das 3 Camadas. E é o que essa avaliação começa a fazer com você agora.",
       ],
       cta: "CONTINUAR",
     },
@@ -238,20 +251,20 @@ export const SCREENS: Screen[] = [
         "🔒 Essa conversa é só sua. Suas respostas são privadas e não vão pra ninguém.",
       headline: "",
       options: [
-        { id: "nenhuma", emoji: "🌑", label: "Nenhuma — sinceramente, vontade zero" },
-        { id: "uma-duas", emoji: "🌒", label: "Uma ou duas — e me assustou ver como virou raro" },
-        { id: "algumas", emoji: "🌓", label: "Algumas vezes — mas passa rápido, antes de virar qualquer coisa" },
-        { id: "varias", emoji: "🌕", label: "Várias — o tesão vem, mas some na hora de transar" },
+        { id: "nenhuma", emoji: "🌑", label: "Nenhuma, sinceramente, vontade zero" },
+        { id: "uma-duas", emoji: "🌒", label: "Uma ou duas, e me assustou ver como virou raro" },
+        { id: "algumas", emoji: "🌓", label: "Algumas vezes, mas passa rápido, antes de virar qualquer coisa" },
+        { id: "varias", emoji: "🌕", label: "Várias, o tesão vem, mas some na hora de transar" },
       ],
     },
     A: {
       headline:
-        "No último mês, quantas vezes você realmente quis transar — sem ser pra cumprir tabela, sem ser pra ele parar de cobrar?",
+        "No último mês, quantas vezes você realmente quis transar, sem ser pra cumprir tabela, sem ser pra ele parar de cobrar?",
       subhead: "Não a vontade que você finge. A que nasce sozinha, só sua.",
     },
     B: {
       headline:
-        "No último mês, quantas vezes despertou uma vontade verdadeira — de transar, de se tocar — sem ninguém por perto pra provocar?",
+        "No último mês, quantas vezes despertou uma vontade verdadeira, de transar, de se tocar, sem ninguém por perto pra provocar?",
       subhead: "Aquele tesão que sobe do nada, só seu.",
     },
   },
@@ -320,12 +333,12 @@ export const SCREENS: Screen[] = [
         {
           id: "corpo",
           emoji: "🪞",
-          label: "Pro meu corpo — se a barriga tá aparecendo, se ele tá reparando",
+          label: "Pro meu corpo, se a barriga tá aparecendo, se ele tá reparando",
         },
         {
           id: "acabar",
           emoji: "⏱️",
-          label: "Pra quando vai acabar — eu só quero que termine logo",
+          label: "Pra quando vai acabar, eu só quero que termine logo",
         },
         {
           id: "finjo",
@@ -337,11 +350,13 @@ export const SCREENS: Screen[] = [
     B: {
       eyebrow: "Quando você tenta sozinha",
       headline: "Quando você tenta se tocar, ou sentir tesão sozinha, o que acontece?",
+      subhead:
+        "Não é frescura nem frieza. É o que te ensinaram a sentir quando tenta. Me conta a verdade.",
       options: [
         {
           id: "culpa",
           emoji: "⛅",
-          label: "A culpa vem antes do prazer — sinto que tô fazendo algo errado",
+          label: "A culpa vem antes do prazer, sinto que tô fazendo algo errado",
         },
         {
           id: "distraio",
@@ -351,7 +366,7 @@ export const SCREENS: Screen[] = [
         {
           id: "nem-tento",
           emoji: "🚪",
-          label: "Eu nem tento mais — virou assunto encerrado",
+          label: "Eu nem tento mais, virou assunto encerrado",
         },
         {
           id: "sem-gozo",
@@ -374,18 +389,19 @@ export const SCREENS: Screen[] = [
       headline:
         "A pergunta que ninguém tem coragem de te fazer: você finge orgasmo?",
       body: [
-        "Geme, acelera, faz a cena toda pra ele achar que você gozou — e por dentro você desligou faz tempo, só esperando acabar.",
+        "Geme, acelera, faz a cena toda pra ele achar que você gozou, e por dentro você desligou faz tempo, só esperando acabar.",
       ],
+      safety: "Aqui ninguém te julga. Não existe resposta certa, só a sua verdade.",
       options: [
         {
           id: "quase-sempre",
           emoji: "🎭",
-          label: "Quase toda vez — já nem sei mais como seria não fingir",
+          label: "Quase toda vez, já nem sei mais como seria não fingir",
         },
         {
           id: "as-vezes",
           emoji: "🌗",
-          label: "Às vezes — quando tô cansada, fingir é mais rápido que explicar",
+          label: "Às vezes, quando tô cansada, fingir é mais rápido que explicar",
         },
         {
           id: "medo",
@@ -395,34 +411,35 @@ export const SCREENS: Screen[] = [
         {
           id: "evito",
           emoji: "🚪",
-          label: "Nem isso — eu invento desculpa pra não transar",
+          label: "Nem isso, eu invento desculpa pra não transar",
         },
       ],
       reassurance:
-        "Respira. Você não é a única — a maioria das mulheres já fingiu, e muitas fingem até hoje. Isso nunca foi frieza sua, nem defeito. Foi a saída que te ensinaram. E tem volta — eu vou te mostrar.",
+        "Respira. Você não é a única, a maioria das mulheres já fingiu, e muitas fingem até hoje. Isso nunca foi frieza sua, nem defeito. Foi a saída que te ensinaram. E tem volta, eu vou te mostrar.",
     },
     B: {
       eyebrow: "A verdade",
       headline:
         "A pergunta que ninguém tem coragem de te fazer: você se toca?",
       body: [
-        "Se dá prazer sozinha, goza por conta própria — sem culpa, sem aquela voz na cabeça dizendo que é feio, que é errado, que mulher direita não faz isso.",
+        "Se dá prazer sozinha, goza por conta própria, sem culpa, sem aquela voz na cabeça dizendo que é feio, que é errado, que mulher direita não faz isso.",
       ],
+      safety: "Aqui ninguém te julga. Não existe resposta certa, só a sua verdade.",
       options: [
         {
           id: "nunca",
           emoji: "🙈",
-          label: "Nunca — aprendi que isso não era coisa pra mim",
+          label: "Nunca, aprendi que isso não era coisa pra mim",
         },
         {
           id: "culpa",
           emoji: "🌗",
-          label: "Às vezes — mas vem sempre com um peso de culpa depois",
+          label: "Às vezes, mas vem sempre com um peso de culpa depois",
         },
         {
           id: "evito",
           emoji: "😔",
-          label: "Evito até sozinha — é mais fácil não mexer nesse assunto",
+          label: "Evito até sozinha, é mais fácil não mexer nesse assunto",
         },
         {
           id: "faz-tempo",
@@ -431,7 +448,7 @@ export const SCREENS: Screen[] = [
         },
       ],
       reassurance:
-        "Respira. A maioria das mulheres carrega essa mesma culpa. Ela não nasceu em você — plantaram. E o que plantaram, dá pra arrancar.",
+        "Respira. A maioria das mulheres carrega essa mesma culpa. Ela não nasceu em você, plantaram. E o que plantaram, dá pra arrancar.",
     },
   },
 
@@ -462,7 +479,7 @@ export const SCREENS: Screen[] = [
         {
           id: "a2",
           label:
-            "Parei de fingir. Semana passada eu gozei de verdade — e chorei depois, de alívio.",
+            "Parei de fingir. Semana passada eu gozei de verdade, e chorei depois, de alívio.",
         },
       ],
     },
@@ -491,7 +508,7 @@ export const SCREENS: Screen[] = [
     universal: {
       eyebrow: "A verdade que ninguém te contou",
       headline:
-        "Você não é fria. Seu tesão não morreu — ele foi sufocado.",
+        "Você não é fria. Seu tesão não morreu, ele foi sufocado.",
       body: [
         "Tudo que você já tentou parte de uma mentira: a de que falta alguma coisa em você. Que você precisa aprender a sentir tesão, consertar o que está quebrado.",
         "Não falta nada em você. Sobra.",
@@ -501,7 +518,7 @@ export const SCREENS: Screen[] = [
         {
           id: "nunca-pensei",
           emoji: "💭",
-          label: "Eu nunca tinha pensado assim — e faz sentido demais",
+          label: "Eu nunca tinha pensado assim, e faz sentido demais",
         },
         {
           id: "explica",
@@ -525,7 +542,7 @@ export const SCREENS: Screen[] = [
         {
           id: "p1",
           emoji: "⛪",
-          label: '"Mulher direita não sente tesão — quem sente é vulgar"',
+          label: '"Mulher direita não sente tesão, quem sente é vulgar"',
           profile: "programacao",
         },
         {
@@ -565,18 +582,19 @@ export const SCREENS: Screen[] = [
     meter: 0.76,
     universal: {
       eyebrow: "Seu corpo hoje",
-      headline: "E o seu corpo — o que ele faz na hora do sexo?",
-      subhead: "Não tem resposta certa. Eu preciso saber como ele reage hoje.",
+      headline: "E o seu corpo, como ele responde quando o sexo chega?",
+      subhead:
+        "Seu corpo não te traiu. Ele só aprendeu a se proteger do que ensinaram pra ele. Me conta como ele está hoje.",
       options: [
         {
           id: "resseca",
           emoji: "🌵",
-          label: 'Resseca, fecha, dói — meu corpo diz "não" antes de eu decidir',
+          label: 'Fecha, resseca, dói, meu corpo diz "não" antes de eu decidir',
         },
         {
           id: "arde",
           emoji: "😬",
-          label: "Arde ou incomoda na penetração — e isso me faz fugir do sexo",
+          label: "Arde ou aperta na hora H, e isso me faz fugir do sexo",
         },
         {
           id: "vazio",
@@ -586,7 +604,7 @@ export const SCREENS: Screen[] = [
         {
           id: "sem-orgasmo",
           emoji: "🌊",
-          label: "Eu até fico excitada, mas nunca chego ao orgasmo",
+          label: "Eu até fico excitada, mas o gozo nunca chega",
         },
       ],
     },
@@ -627,7 +645,7 @@ export const SCREENS: Screen[] = [
     },
     B: {
       eyebrow: "A ideia de recomeçar",
-      headline: "E a ideia de transar com alguém de novo — o que mexe em você?",
+      headline: "E a ideia de transar com alguém de novo, o que mexe em você?",
       options: [
         {
           id: "pavor",
@@ -663,7 +681,7 @@ export const SCREENS: Screen[] = [
     universal: {
       eyebrow: "Imagine por 3 segundos",
       headline:
-        "Fecha os olhos por 3 segundos. Imagina você sentindo tesão de verdade, gozando sem fingir, pedindo o que quer sem vergonha. Quando abrir os olhos — o que muda primeiro na sua vida?",
+        "Fecha os olhos por 3 segundos. Imagina você sentindo tesão de verdade, gozando sem fingir, pedindo o que quer sem vergonha. Quando abrir os olhos, o que muda primeiro na sua vida?",
     },
     A: {
       headline: "",
@@ -706,7 +724,7 @@ export const SCREENS: Screen[] = [
         { id: "a2", label: "Quero voltar a me sentir desejada e também desejar" },
         { id: "a3", label: "Tenho medo de perder meu casamento por causa do sexo" },
         { id: "a4", label: "Cansei de fingir orgasmo e fingir que tá tudo bem" },
-        { id: "a5", label: "Quero sentir tesão e gozar de verdade — o que eu nunca tive" },
+        { id: "a5", label: "Quero sentir tesão e gozar de verdade, o que eu nunca tive" },
       ],
     },
     B: {
@@ -716,7 +734,7 @@ export const SCREENS: Screen[] = [
         { id: "b2", label: "Quero voltar a me sentir desejável" },
         { id: "b3", label: "Tenho medo de levar essa mesma trava pra próxima relação" },
         { id: "b4", label: "Cansei de fingir, até pra mim, que tá tudo bem" },
-        { id: "b5", label: "Quero sentir tesão e gozar de verdade — o que eu nunca tive" },
+        { id: "b5", label: "Quero sentir tesão e gozar de verdade, o que eu nunca tive" },
       ],
     },
   },
@@ -750,8 +768,8 @@ export const SCREENS: Screen[] = [
       headline: "Seu diagnóstico está pronto.",
       body: [
         "Ao contrário do que você sempre temeu, o problema nunca foi falta de tesão. É o oposto: sobra. Você tem muito desejo preso.",
-        "E desejo preso não some — ele se acumula, igual água atrás de uma represa, até virar pressão. E essa pressão vira irritação, distância, sexo por obrigação, e aquela sensação de que a sua vida sexual já acabou.",
-        "Não acabou. O que está preso pode ser solto — e eu vou te mostrar como.",
+        "E desejo preso não some, ele se acumula, igual água atrás de uma represa, até virar pressão. E essa pressão vira irritação, distância, sexo por obrigação, e aquela sensação de que a sua vida sexual já acabou.",
+        "Não acabou. O que está preso pode ser solto, e eu vou te mostrar como.",
       ],
       subhead:
         "Com base no seu perfil, esta é a sua jornada de volta ao prazer pelas 3 Camadas:",
@@ -766,13 +784,13 @@ export const SCREENS: Screen[] = [
     meter: 1,
     universal: {
       headline:
-        "O plano Puro Gozo te leva camada por camada — da programação que você não escolheu até a mulher que sente, deseja, pede e goza sem pedir licença. A que sempre esteve aí dentro.",
+        "O plano Puro Gozo te leva camada por camada, da programação que você não escolheu até a mulher que sente, deseja, pede e goza sem pedir licença. A que sempre esteve aí dentro.",
       cta: "QUERO MEU MÉTODO AGORA",
     },
   },
 ];
 
-// Linha do tempo da jornada (T19) — gráfico que se desenha
+// Linha do tempo da jornada (T19), gráfico que se desenha
 export const JOURNEY = [
   {
     marco: "Ponto de partida",
@@ -782,17 +800,17 @@ export const JOURNEY = [
   {
     marco: "Primeiros dias",
     camada: "Camada 1 · A Programação",
-    o_que: "A culpa começa a afrouxar — você entende que não nasceu fria, te ensinaram a ser",
+    o_que: "A culpa começa a afrouxar, você entende que não nasceu fria, te ensinaram a ser",
   },
   {
     marco: "Virada",
     camada: "Camada 2 · O Silêncio",
-    o_que: "A cabeça para de fugir na hora do sexo — o corpo volta a responder",
+    o_que: "A cabeça para de fugir na hora do sexo, o corpo volta a responder",
   },
   {
     marco: "Aceleração",
     camada: "Camada 3 · A Mulher do Outro Lado",
-    o_que: "O tesão volta a aparecer sozinho — você começa a pedir o que quer",
+    o_que: "O tesão volta a aparecer sozinho, você começa a pedir o que quer",
   },
   {
     marco: "Transformação",
@@ -840,3 +858,51 @@ export function profileFromAnswer(optionId: string | undefined): Profile {
 
 export const meterBandLabel = (meter: number): string =>
   METER_BANDS.find((b) => meter < b.upTo)?.label ?? METER_BANDS[0].label;
+
+// ── Recibo de personalização ──────────────────────────────
+// Ecoa as respostas dela (T9, T10, T15) em fragmentos que completam
+// "Você disse que ...". Auto-relevância = dopamina + oferta sob medida.
+const RECEIPT_FRAGMENTS: Record<number, Record<string, string>> = {
+  10: {
+    // caminho A (finge orgasmo)
+    "quase-sempre": "finge quase toda vez",
+    "as-vezes": "finge quando cansa, pra não ter que explicar",
+    medo: "tem medo de nunca mais gozar de verdade",
+    evito: "inventa desculpa pra não transar",
+    // caminho B (se toca)
+    nunca: "nunca se permitiu se tocar",
+    culpa: "sente culpa toda vez que tenta",
+    "faz-tempo": "não sabe mais se ainda consegue gozar",
+  },
+  9: {
+    tarefas: "sua cabeça foge pra louça, pras contas",
+    corpo: "fica vigiando o próprio corpo",
+    acabar: "só quer que o sexo termine logo",
+    finjo: "finge que tá ali, mas não está",
+    distraio: "perde a vontade no meio e desiste",
+    "nem-tento": "nem tenta mais",
+    "sem-gozo": "começa a sentir, mas não chega ao gozo",
+  },
+  15: {
+    "nao-transa": "vocês não transam mais",
+    obrigacao: "transa por obrigação, sem tesão nenhum",
+    estranhos: "viraram dois estranhos na cama",
+    pavor: "tem pavor de travar com alguém",
+    fechei: "se fechou depois da última vez",
+    desisti: "achou mais fácil desistir do sexo",
+  },
+};
+
+export function buildReceipt(
+  answers: Record<number, string | string[]>
+): string | null {
+  const frags: string[] = [];
+  for (const id of [10, 9, 15]) {
+    const ans = answers[id];
+    const key = Array.isArray(ans) ? ans[0] : ans;
+    const frag = key ? RECEIPT_FRAGMENTS[id]?.[key] : undefined;
+    if (frag) frags.push(frag);
+  }
+  if (frags.length === 0) return null;
+  return `Você disse que ${frags.join(". Que ")}.`;
+}

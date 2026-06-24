@@ -7,79 +7,125 @@ import { useReducedMotion, DIARY } from "@/lib/motion";
 import { Stagger, Item, Eyebrow, Headline } from "../Parts";
 import { OptionCard } from "@/components/ui/OptionCard";
 
-// As 3 camadas (rótulos curtos para a cena; texto completo no corpo abaixo)
-const LAYERS = [
-  { label: "O Hábito de Fingir", hint: "que virou prisão" },
-  { label: "A Culpa · o Medo · a Vergonha", hint: "de querer, de pedir, de gozar" },
-  { label: "A Programação", hint: "religião, família, cultura" },
+// Véus/estratos na ordem em que são retirados (do mais recente ao mais fundo)
+const VEILS = [
+  { n: 3, label: "O Hábito de Fingir", hint: "que virou prisão" },
+  { n: 2, label: "A Culpa · o Medo · a Vergonha", hint: "de querer, de pedir, de gozar" },
+  { n: 1, label: "A Programação", hint: "religião, família, cultura" },
 ];
 
-// Cena: camadas empilhadas que se retiram uma a uma, revelando o núcleo vivo
+// Estratos sólidos, cores distintas (lê-se 3 camadas diferentes)
+const VEIL_BG = [
+  "linear-gradient(155deg, #2a1f3e 0%, #4a2748 100%)",
+  "linear-gradient(155deg, #2d2752 0%, #5d3152 100%)",
+  "linear-gradient(155deg, #363975 0%, #6e3350 100%)",
+];
+
+// Brasas que sobem do núcleo (posições/atrasos determinísticos)
+const EMBERS = [
+  { x: -38, d: 0.0, s: 6.5 },
+  { x: -14, d: 0.6, s: 5 },
+  { x: 10, d: 0.25, s: 6 },
+  { x: 32, d: 0.8, s: 5.5 },
+  { x: -26, d: 1.0, s: 6 },
+];
+
+// Cena "O Desaterro": estratos SÓLIDOS deslizam pra cima e saem de quadro,
+// revelando o tesão vivo embaixo. Opacos o tempo todo = nada vaza no início.
+// A legenda fica ABAIXO da cena, sem sobrepor o círculo.
 function LayersReveal() {
   const reduced = useReducedMotion();
-  const peelStart = 0.6;
+  const peelBase = 0.5;
+  const step = 0.9;
+  const revealAt = peelBase + (VEILS.length - 1) * step + 0.85; // ~3.15s
 
   return (
-    <div className="relative mx-auto my-8 h-64 w-full max-w-sm">
-      {/* núcleo vivo — o tesão intacto, pulsando com luz quente */}
-      <motion.div
-        className="absolute inset-0 flex items-center justify-center"
-        initial={{ opacity: 0, scale: 0.85 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: reduced ? 0 : peelStart + LAYERS.length * 0.85, duration: 0.9, ease: DIARY }}
+    <div className="mx-auto my-8 flex w-full max-w-sm flex-col items-center gap-4">
+      {/* cena */}
+      <div
+        className="relative h-56 w-full overflow-hidden rounded-[28px] border border-nevoa/30"
+        style={{ background: "radial-gradient(120% 95% at 50% 55%, #fbeede, #fbf4f6)" }}
       >
-        <motion.div
-          className="relative flex h-44 w-44 items-center justify-center rounded-full"
-          style={{
-            background:
-              "radial-gradient(circle at 50% 45%, #ffd9a8 0%, #e79a7d 28%, #c97d90 55%, #6e3350 100%)",
-            boxShadow: "0 0 70px 14px rgba(231,154,125,0.45)",
-          }}
-          animate={
-            reduced
-              ? {}
-              : { scale: [1, 1.06, 1], boxShadow: [
-                  "0 0 60px 10px rgba(231,154,125,0.40)",
-                  "0 0 90px 20px rgba(231,154,125,0.60)",
-                  "0 0 60px 10px rgba(231,154,125,0.40)",
-                ] }
-          }
-          transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut", delay: reduced ? 0 : peelStart + LAYERS.length * 0.85 }}
-        >
-          <span className="px-6 text-center font-serif text-[0.95rem] italic leading-snug text-white drop-shadow">
-            Vivo. Inteiro. Esperando.
-          </span>
-        </motion.div>
-      </motion.div>
+        {/* núcleo vivo — sempre presente, pulsando; escondido pelos véus opacos */}
+        <div className="absolute inset-0 z-0 flex items-center justify-center">
+          <motion.div
+            className="h-36 w-36 rounded-full"
+            style={{
+              background:
+                "radial-gradient(circle at 50% 42%, #ffe6c2 0%, #f0a878 26%, #d6809a 52%, #6e3350 100%)",
+            }}
+            animate={
+              reduced
+                ? { boxShadow: "0 0 60px 14px rgba(240,168,120,0.5)" }
+                : {
+                    scale: [1, 1.05, 1],
+                    boxShadow: [
+                      "0 0 45px 8px rgba(240,168,120,0.38)",
+                      "0 0 80px 18px rgba(255,214,150,0.6)",
+                      "0 0 45px 8px rgba(240,168,120,0.38)",
+                    ],
+                  }
+            }
+            transition={{ duration: 3.4, repeat: Infinity, ease: "easeInOut" }}
+          />
+        </div>
 
-      {/* camadas que se retiram (peeling/dissolve) */}
-      {LAYERS.map((layer, i) => (
-        <motion.div
-          key={layer.label}
-          className="absolute inset-0 flex flex-col items-center justify-center rounded-3xl border border-nevoa/40 px-6 text-center"
-          style={{
-            zIndex: 10 + i,
-            background: `linear-gradient(155deg, rgba(54,57,117,${0.96 - i * 0.04}), rgba(110,51,80,${0.94 - i * 0.04}))`,
-          }}
-          initial={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-          animate={
-            reduced
-              ? { opacity: 0 }
-              : { opacity: 0, y: -38 - i * 6, filter: "blur(10px)", scale: 1.04 }
-          }
-          transition={{
-            delay: reduced ? 0.1 * i : peelStart + i * 0.85,
-            duration: reduced ? 0.2 : 0.95,
-            ease: DIARY,
-          }}
-        >
-          <p className="eyebrow text-rose-suave/90">Camada {LAYERS.length - i}</p>
-          <p className="mt-2 font-serif text-[1.15rem] text-marfim" style={{ fontWeight: 600 }}>
-            {layer.label}
-          </p>
-          <p className="mt-1 font-sans text-[0.82rem] text-nevoa">{layer.hint}</p>
-        </motion.div>
-      ))}
+        {/* brasas subindo, surgem quando o núcleo já foi revelado */}
+        {!reduced &&
+          EMBERS.map((e, i) => (
+            <motion.span
+              key={i}
+              className="absolute left-1/2 top-1/2 z-[2] h-1.5 w-1.5 rounded-full"
+              style={{ background: "rgba(255,214,150,0.9)", marginLeft: e.x }}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: [0, 1, 0], y: [-2, -110] }}
+              transition={{
+                delay: revealAt + e.d,
+                duration: e.s,
+                repeat: Infinity,
+                repeatDelay: 0.5,
+                ease: "easeOut",
+              }}
+            />
+          ))}
+
+        {/* véus sólidos que deslizam pra cima e saem de quadro (clipados) */}
+        {VEILS.map((veil, i) => (
+          <motion.div
+            key={veil.label}
+            className="absolute inset-0 flex flex-col items-center justify-center px-6 text-center"
+            style={{ zIndex: 30 - i, background: VEIL_BG[i] }}
+            initial={{ y: 0 }}
+            animate={reduced ? { opacity: 0 } : { y: "-104%" }}
+            transition={{
+              delay: reduced ? 0.06 * i : peelBase + i * step,
+              duration: reduced ? 0.2 : 0.85,
+              ease: [0.7, 0, 0.84, 0], // ease-in: acelera ao sair (sensação de "puxar")
+            }}
+          >
+            <p className="eyebrow text-rose-suave/90">Camada {veil.n}</p>
+            <p className="mt-2 font-serif text-[1.18rem] text-marfim" style={{ fontWeight: 600 }}>
+              {veil.label}
+            </p>
+            <p className="mt-1 font-sans text-[0.82rem] text-nevoa">{veil.hint}</p>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* legenda — fora da cena, sem sobrepor o círculo */}
+      <motion.div
+        className="flex flex-col items-center text-center"
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: reduced ? 0.1 : revealAt + 0.2, duration: 0.7, ease: DIARY }}
+      >
+        <p className="font-serif text-[1.05rem] italic text-indigo" style={{ fontWeight: 600 }}>
+          Sempre esteve aqui.
+        </p>
+        <p className="eyebrow mt-1 text-vinho" style={{ fontSize: "0.6rem" }}>
+          Vivo · Inteiro · Esperando
+        </p>
+      </motion.div>
     </div>
   );
 }
@@ -105,8 +151,8 @@ export function MechanismScreen({ content }: { content: ScreenContent }) {
         <Item>
           <p className="font-serif text-[1.05rem] italic leading-snug text-vinho">
             {fingeMuito
-              ? "Você disse que finge quase toda vez. Que sua cabeça foge. Isso tem um nome —"
-              : "Tudo que você respondeu até aqui aponta pro mesmo lugar. Isso tem um nome —"}
+              ? "Você disse que finge quase toda vez. Que sua cabeça foge. Isso tem um nome:"
+              : "Tudo que você respondeu até aqui aponta pro mesmo lugar. Isso tem um nome:"}
           </p>
         </Item>
 
@@ -128,7 +174,7 @@ export function MechanismScreen({ content }: { content: ScreenContent }) {
           </Item>
         ))}
 
-        {/* CENA — as camadas saindo */}
+        {/* CENA, as camadas saindo */}
         <Item>
           <LayersReveal />
         </Item>
@@ -137,7 +183,7 @@ export function MechanismScreen({ content }: { content: ScreenContent }) {
         <Item>
           <div className="flex flex-col gap-3 rounded-2xl bg-white px-5 py-5 shadow-[0_10px_40px_-18px_rgba(54,57,117,0.4)]">
             <LayerLine>
-              <strong className="font-medium">A programação</strong> que a religião, a sua família e a cultura puseram sobre o seu desejo — antes de você ter qualquer escolha.
+              <strong className="font-medium">A programação</strong> que a religião, a sua família e a cultura puseram sobre o seu desejo, antes de você ter qualquer escolha.
             </LayerLine>
             <p className="pl-7 font-serif text-[0.95rem] italic text-lavanda">
               “Sexo é pecado.” “Mulher direita não sente.” “Prazer é coisa de homem.”
@@ -146,7 +192,7 @@ export function MechanismScreen({ content }: { content: ScreenContent }) {
               <strong className="font-medium">A culpa de querer.</strong> O medo de pedir o que você gosta. A vergonha de gozar.
             </LayerLine>
             <LayerLine>
-              <strong className="font-medium">O hábito de fingir</strong> — que um dia foi mais fácil que explicar, e virou prisão.
+              <strong className="font-medium">O hábito de fingir</strong>, que um dia foi mais fácil que explicar, e virou prisão.
             </LayerLine>
             <p className="pl-7 font-sans text-[0.9rem] text-tinta/70">
               Camada sobre camada sobre camada. Até o tesão sumir de vista, mas nunca de você.
@@ -154,7 +200,7 @@ export function MechanismScreen({ content }: { content: ScreenContent }) {
           </div>
         </Item>
 
-        {/* o método — a virada */}
+        {/* o método, a virada */}
         <Item>
           <div className="rounded-2xl border border-rose/40 bg-[#f7e7eb] px-5 py-5">
             <p className="flex gap-2 font-sans text-[0.98rem] leading-relaxed text-tinta">
@@ -169,7 +215,7 @@ export function MechanismScreen({ content }: { content: ScreenContent }) {
 
         <Item>
           <p className="font-serif text-[1.12rem] leading-snug text-indigo" style={{ fontWeight: 600 }}>
-            A mulher do outro lado dessas camadas — a que sente, que pede, que goza, que escolhe — você ainda não conhece. Mas ela já é você.
+            A mulher do outro lado dessas camadas, a que sente, que pede, que goza, que escolhe, você ainda não conhece. Mas ela já é você.
           </p>
         </Item>
         <Item>

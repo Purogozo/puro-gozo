@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import type { ScreenContent } from "@/lib/types";
 import { useQuiz } from "@/lib/store";
-import { PROFILES } from "@/lib/screens";
+import { PROFILES, buildReceipt } from "@/lib/screens";
 import { OFFER } from "@/lib/config";
 import { Logo } from "@/components/brand/Logo";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
@@ -19,16 +19,26 @@ const ANTES_DEPOIS: [string, string][] = [
 
 const DEPOIMENTOS = [
   "Voltei a sentir tesão pelo meu marido depois de 12 anos. Ele perguntou o que mudou em mim.",
-  "Parei de fingir. Semana passada gozei de verdade — e chorei de alívio.",
+  "Parei de fingir. Semana passada gozei de verdade, e chorei de alívio.",
   "Depois do divórcio achei que tinha acabado pra mim. Hoje sinto mais sozinha do que senti em 20 anos de casada.",
 ];
 
 function useCountdown(seconds: number) {
   const [left, setLeft] = useState(seconds);
   useEffect(() => {
-    const t = window.setInterval(() => setLeft((s) => (s > 0 ? s - 1 : 0)), 1000);
+    // prazo persistido, não reseta no refresh (credibilidade da urgência)
+    const KEY = "pg-offer-deadline";
+    let deadline = Number(localStorage.getItem(KEY));
+    if (!deadline || Number.isNaN(deadline) || deadline < Date.now()) {
+      deadline = Date.now() + seconds * 1000;
+      localStorage.setItem(KEY, String(deadline));
+    }
+    const tick = () =>
+      setLeft(Math.max(0, Math.round((deadline - Date.now()) / 1000)));
+    tick();
+    const t = window.setInterval(tick, 1000);
     return () => window.clearInterval(t);
-  }, []);
+  }, [seconds]);
   const mm = String(Math.floor(left / 60)).padStart(2, "0");
   const ss = String(left % 60).padStart(2, "0");
   return `${mm}:${ss}`;
@@ -57,6 +67,8 @@ export function SalesScreen({
 }) {
   const profileKey = useQuiz((s) => s.profile());
   const profile = PROFILES[profileKey];
+  const answers = useQuiz((s) => s.answers);
+  const receipt = buildReceipt(answers);
   const timer = useCountdown(OFFER.timerSeconds);
 
   return (
@@ -69,6 +81,11 @@ export function SalesScreen({
           <h1 className="font-serif text-[1.7rem] leading-tight text-indigo" style={{ fontWeight: 700 }}>
             {content.headline}
           </h1>
+          {receipt && (
+            <p className="max-w-md font-serif text-[1rem] italic leading-snug text-vinho">
+              {receipt} Isso não é frieza, é represa.
+            </p>
+          )}
           <div className="mt-2 flex items-center gap-2 rounded-full bg-vinho px-5 py-2 font-sans text-[0.85rem] text-marfim">
             <span>⏳ Essa condição expira em:</span>
             <span className="font-mono tabular-nums">{timer}</span>

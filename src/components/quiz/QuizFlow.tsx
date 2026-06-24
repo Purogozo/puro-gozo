@@ -131,11 +131,16 @@ export function QuizFlow({ variant = "a" }: { variant?: Variant }) {
 
   return (
     <div className={`relative min-h-dvh w-full ${bgClass} ${screen.intimate ? "grain" : ""}`}>
-      {/* flicker de vela nas telas íntimas */}
+      {/* flicker de vela nas telas íntimas — acento por caminho (T3):
+          A (com parceiro) = luz quente · B (sozinha) = luz fria/lavanda */}
       {screen.intimate && !reduced && (
         <div
           className="pointer-events-none fixed inset-0 z-0 candle-glow"
-          style={{ background: "radial-gradient(100% 60% at 50% 10%, rgba(231,154,125,0.14), transparent 55%)" }}
+          style={{
+            background: `radial-gradient(100% 60% at 50% 10%, ${
+              path === "A" ? "rgba(231,154,125,0.15)" : "rgba(123,118,170,0.15)"
+            }, transparent 55%)`,
+          }}
         />
       )}
 

@@ -92,9 +92,11 @@ export function LandingScreen({
           <PrimaryButton pulse onClick={() => next()}>
             {content.cta} →
           </PrimaryButton>
-          <p className="font-sans text-[0.78rem] text-nevoa/90">
-            {content.microcopy}
-          </p>
+          {content.microcopy && (
+            <p className="font-sans text-[0.78rem] text-nevoa/90">
+              {content.microcopy}
+            </p>
+          )}
           <div className="mt-1 flex items-center gap-1.5 text-nevoa/70">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
               <rect x="3" y="11" width="18" height="11" rx="2" />

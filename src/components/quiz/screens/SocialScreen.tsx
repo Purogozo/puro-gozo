@@ -5,7 +5,7 @@ import { useQuiz } from "@/lib/store";
 import { Stagger, Item, Eyebrow, Headline, Subhead } from "../Parts";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 
-// T11 — prova social (prints de mensagens reais, rosto borrado)
+// T11, prova social (prints de mensagens reais, rosto borrado)
 export function SocialScreen({
   screen,
   content,

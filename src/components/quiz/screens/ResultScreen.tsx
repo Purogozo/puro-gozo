@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "motion/react";
 import type { ScreenContent } from "@/lib/types";
 import { useQuiz } from "@/lib/store";
 import { useReducedMotion, DIARY, haptic } from "@/lib/motion";
-import { PROFILES, JOURNEY } from "@/lib/screens";
+import { PROFILES, JOURNEY, buildReceipt } from "@/lib/screens";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 
 // ── Represa cheia sob pressão, com rachaduras ──────────────
@@ -103,7 +103,7 @@ function DamScene({ bursting }: { bursting: boolean }) {
   );
 }
 
-// ── Gráfico da jornada — linha se desenha (azul frio → dourado quente) ──
+// ── Gráfico da jornada, linha se desenha (azul frio → dourado quente) ──
 function JourneyTimeline() {
   const reduced = useReducedMotion();
   return (
@@ -162,6 +162,8 @@ export function ResultScreen({
   const next = useQuiz((s) => s.next);
   const profileKey = useQuiz((s) => s.profile());
   const profile = PROFILES[profileKey];
+  const answers = useQuiz((s) => s.answers);
+  const receipt = buildReceipt(answers);
   const [bursting, setBursting] = useState(false);
   const advance = onAdvance ?? next;
 
@@ -182,6 +184,18 @@ export function ResultScreen({
         </motion.div>
 
         <DamScene bursting={bursting} />
+
+        {/* recibo de personalização, eco das respostas dela */}
+        {receipt && (
+          <motion.p
+            className="font-serif text-[1.15rem] italic leading-snug text-rose-suave"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: reduced ? 0 : 1.3, duration: 0.6, ease: DIARY }}
+          >
+            {receipt}
+          </motion.p>
+        )}
 
         {/* perfil desbloqueado */}
         <motion.div
@@ -221,20 +235,40 @@ export function ResultScreen({
 
         <JourneyTimeline />
 
-        {/* score qualitativo de probabilidade */}
+        {/* número como ESPERANÇA, a chance de resolver (motiva continuar) */}
         <motion.div
-          className="flex items-center gap-4 rounded-2xl border border-marfim/15 bg-white/[0.04] px-5 py-4"
+          className="flex items-center gap-4 rounded-2xl border border-rose/30 bg-white/[0.05] px-5 py-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: reduced ? 0 : 2.4, duration: 0.6 }}
         >
-          <span className="font-serif text-4xl text-rose" style={{ fontWeight: 700 }}>92%</span>
-          <p className="font-sans text-[0.84rem] leading-snug text-nevoa" style={{ fontWeight: 300 }}>
-            Probabilidade de você voltar a sentir tesão com o Método — com base nas mulheres com a mesma camada dominante que a sua.
+          <span className="font-serif text-5xl text-rose" style={{ fontWeight: 700 }}>92%</span>
+          <div>
+            <p className="font-sans text-[0.9rem] leading-snug text-marfim" style={{ fontWeight: 400 }}>
+              é a chance de você voltar a sentir com o Método, entre as mulheres com a sua mesma camada dominante.
+            </p>
+            <p className="mt-1 font-serif text-[0.98rem] italic text-rose-suave">
+              Você está muito mais perto do que pensa.
+            </p>
+          </div>
+        </motion.div>
+
+        {/* fecho em PRESSÃO, custo da inação, último beat antes do CTA */}
+        <motion.div
+          className="rounded-2xl border-l-2 border-rose bg-vinho/25 px-5 py-4"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: reduced ? 0 : 2.6, duration: 0.6, ease: DIARY }}
+        >
+          <p className="font-serif text-[1.12rem] italic leading-snug text-marfim">
+            Mas a represa não espera. Cada mês que passa, mais desejo preso vira mais pressão, mais distância, mais sexo por obrigação.
+          </p>
+          <p className="mt-1.5 font-sans text-[0.9rem] text-rose-suave" style={{ fontWeight: 400 }}>
+            A diferença entre quem volta a sentir e quem desiste é uma só: começar.
           </p>
         </motion.div>
 
-        {/* CTA — abrir a válvula */}
+        {/* CTA, abrir a válvula */}
         <div className="mt-2 flex flex-col items-center gap-3">
           <PrimaryButton pulse full onClick={abrirValvula}>
             {ctaLabel ?? content.cta} →

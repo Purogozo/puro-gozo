@@ -7,7 +7,7 @@ import { useReducedMotion, DIARY } from "@/lib/motion";
 import { Logo } from "@/components/brand/Logo";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 
-// T4 — carta/confissão da Andreia (tom quente, luz baixa)
+// T4, carta/confissão da Andreia (tom quente, luz baixa)
 export function LetterScreen({ content }: { content: ScreenContent }) {
   const reduced = useReducedMotion();
   const next = useQuiz((s) => s.next);
@@ -21,7 +21,7 @@ export function LetterScreen({ content }: { content: ScreenContent }) {
       <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-lg flex-col px-6 pb-12 pt-16">
         <Logo tone="marfim" className="mx-auto text-xl" />
 
-        {/* foto da Andreia — placeholder com ken-burns (trocar por /public/andreia.jpg) */}
+        {/* foto da Andreia, placeholder com ken-burns (trocar por /public/andreia.jpg) */}
         <motion.div
           className="mx-auto mt-8 h-28 w-28 overflow-hidden rounded-full border border-rose/40"
           initial={{ opacity: 0, scale: 1.08 }}
@@ -50,7 +50,7 @@ export function LetterScreen({ content }: { content: ScreenContent }) {
             <motion.p
               key={i}
               className={`leading-relaxed ${
-                p.startsWith("Eu chamo")
+                p.startsWith("Isso é o Método")
                   ? "font-serif text-[1.1rem] italic text-rose-suave"
                   : "font-sans text-[0.98rem] text-marfim/85"
               }`}

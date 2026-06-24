@@ -1,9 +1,9 @@
 // ============================================================
 // PURO GOZO · Configuração de integração
-// (edite estes valores — não precisa mexer em componentes)
+// (edite estes valores: não precisa mexer em componentes)
 // ============================================================
 
-// Checkout Hotmart — troque pelo link real do produto
+// Checkout Hotmart: troque pelo link real do produto
 export const CHECKOUT_URL =
   process.env.NEXT_PUBLIC_CHECKOUT_URL ?? "https://pay.hotmart.com/XXXXXXX";
 
@@ -30,14 +30,14 @@ export const TRACKED_PARAMS = [
   "sck",
 ] as const;
 
-// Preço (oferta) — fonte única do bloco de vendas
+// Preço (oferta): fonte única do bloco de vendas
 export const OFFER = {
   itens: [
-    { nome: "Método das 3 Camadas — 6 módulos", valor: "R$ 197" },
-    { nome: "🎁 Anatomia do prazer — o que ninguém te mostrou sobre o seu corpo e o seu orgasmo", valor: "R$ 77" },
-    { nome: "🎁 Presença na hora H — como fazer a cabeça parar de fugir durante o sexo, sem culpa", valor: "R$ 119" },
-    { nome: "🎁 Comunicação erótica — como pedir o que você quer na cama sem criar climão", valor: "R$ 159" },
-    { nome: "🎁 Acesso ao aplicativo completo — tudo organizado, da primeira à última camada", valor: "incluso" },
+    { nome: "Método das 3 Camadas: 6 módulos", valor: "R$ 197" },
+    { nome: "🎁 Anatomia do prazer: o que ninguém te mostrou sobre o seu corpo e o seu orgasmo", valor: "R$ 77" },
+    { nome: "🎁 Presença na hora H: como fazer a cabeça parar de fugir durante o sexo, sem culpa", valor: "R$ 119" },
+    { nome: "🎁 Comunicação erótica: como pedir o que você quer na cama sem criar climão", valor: "R$ 159" },
+    { nome: "🎁 Acesso ao aplicativo completo: tudo organizado, da primeira à última camada", valor: "incluso" },
   ],
   de: "R$ 552",
   por: "R$ 47",

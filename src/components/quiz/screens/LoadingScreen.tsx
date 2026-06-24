@@ -7,7 +7,7 @@ import { useQuiz } from "@/lib/store";
 import { useReducedMotion, DIARY } from "@/lib/motion";
 import { Logo } from "@/components/brand/Logo";
 
-// T18 — loading: água subindo + linhas de cálculo (typewriter)
+// T18, loading: água subindo + linhas de cálculo (typewriter)
 export function LoadingScreen({ content }: { content: ScreenContent }) {
   const reduced = useReducedMotion();
   const next = useQuiz((s) => s.next);
