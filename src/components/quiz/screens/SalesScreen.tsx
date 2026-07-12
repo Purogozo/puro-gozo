@@ -137,7 +137,15 @@ export function SalesScreen({
                   <span className="text-rose">✓</span>
                   {it.nome}
                 </span>
-                <span className="shrink-0 font-sans text-[0.82rem] text-lavanda line-through">{it.valor}</span>
+                <span
+                  className={
+                    it.valor.startsWith("R$")
+                      ? "shrink-0 font-sans text-[0.82rem] text-lavanda line-through"
+                      : "shrink-0 font-sans text-[0.82rem] font-medium uppercase tracking-wide text-rose"
+                  }
+                >
+                  {it.valor}
+                </span>
               </div>
             ))}
           </div>

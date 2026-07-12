@@ -111,8 +111,8 @@ export const SCREENS: Screen[] = [
       headline: "Quem vai te mostrar como reacender a sua chama",
       body: [
         "Sou Andreia Fiamoncini, psicóloga e sexóloga. E eu já fiz o que muitas de vocês fazem: eu fingi.",
-        "Fingi gozo. Inventei dor de cabeça, sono, cansaço pra não transar e sentia alívio. No fundo, achava que tinha algo errado comigo.",
-        "Não tinha. Meu desejo nunca foi embora, só foi sendo coberto, camada por camada, por tudo que puseram na gente antes de a gente poder discordar.",
+        "Fingi gozo. Inventei dor de cabeça, sono, cansaço pra não transar, e sentia alívio. No fundo, achava que tinha algo errado comigo.",
+        "Mas eu descobri que o meu desejo sempre existiu. Ele só foi sendo coberto, camada por camada, por tudo que puseram na gente antes da gente poder discordar.",
         "Quando comecei a tirar essas camadas, apareceu uma mulher que eu nunca tinha conhecido: que sente tesão, que pede, que goza sem pedir licença. E ela sempre esteve ali, embaixo de tudo.",
         "Isso é o Método das 3 Camadas. E é o que essa avaliação começa a fazer com você agora.",
       ],
@@ -147,13 +147,13 @@ export const SCREENS: Screen[] = [
           id: "automatico",
           emoji: "⏱️",
           label: "Sair do sexo no automático",
-          sublabel: "transo de obrigação, contando os minutos pra acabar",
+          sublabel: "transo por obrigação, contando os minutos pra acabar",
         },
         {
           id: "querer-ele",
           emoji: "💔",
           label: "Voltar a querer transar com ele",
-          sublabel: "a gente virou colega de quarto, não transa mais",
+          sublabel: "a gente virou colega de quarto",
         },
         {
           id: "tudo",
@@ -177,7 +177,7 @@ export const SCREENS: Screen[] = [
         {
           id: "reconectar",
           emoji: "🪞",
-          label: "Me reconectar com meu corpo",
+          label: "Me reconectar com o meu corpo",
           sublabel: "esqueci o que é sentir prazer",
         },
         {
@@ -194,7 +194,7 @@ export const SCREENS: Screen[] = [
           id: "reencontrar",
           emoji: "✨",
           label: "Me reencontrar primeiro, sozinha",
-          sublabel: "antes de dividir com qualquer um",
+          sublabel: "antes de dividir com alguém",
         },
       ],
     },
