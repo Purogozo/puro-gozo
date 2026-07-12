@@ -48,7 +48,6 @@ type EventName =
   | "screen_view"
   | "option_select"
   | "quiz_complete"
-  | "lead_capture"
   | "cta_click"
   | "checkout_redirect";
 

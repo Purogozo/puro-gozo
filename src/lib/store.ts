@@ -11,17 +11,11 @@ import {
 
 type Answers = Record<number, string | string[]>;
 
-interface Lead {
-  email?: string;
-  whatsapp?: string;
-}
-
 interface QuizState {
   index: number; // posição na lista SCREENS (0-based)
   answers: Answers;
   audioOn: boolean;
   hydrated: boolean;
-  lead: Lead | null;
 
   // derivados
   path: () => Path;
@@ -35,7 +29,6 @@ interface QuizState {
   prev: () => void;
   goToScreenId: (id: number) => void;
   toggleAudio: () => void;
-  setLead: (lead: Lead) => void;
   reset: () => void;
   setHydrated: () => void;
 }
@@ -47,7 +40,6 @@ export const useQuiz = create<QuizState>()(
       answers: {},
       audioOn: false,
       hydrated: false,
-      lead: null,
 
       path: () => pathFromStatus(get().answers[3] as string | undefined),
       profile: () => profileFromAnswer(get().answers[13] as string | undefined),
@@ -69,9 +61,7 @@ export const useQuiz = create<QuizState>()(
 
       toggleAudio: () => set((s) => ({ audioOn: !s.audioOn })),
 
-      setLead: (lead) => set({ lead }),
-
-      reset: () => set({ index: 0, answers: {}, lead: null }),
+      reset: () => set({ index: 0, answers: {} }),
 
       setHydrated: () => set({ hydrated: true }),
     }),
@@ -81,7 +71,6 @@ export const useQuiz = create<QuizState>()(
         index: s.index,
         answers: s.answers,
         audioOn: s.audioOn,
-        lead: s.lead,
       }),
       onRehydrateStorage: () => (state) => {
         state?.setHydrated();

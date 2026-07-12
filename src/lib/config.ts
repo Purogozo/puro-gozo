@@ -11,11 +11,6 @@ export const CHECKOUT_URL =
 export const ANALYTICS_ENDPOINT =
   process.env.NEXT_PUBLIC_ANALYTICS_ENDPOINT ?? "";
 
-// Captura de lead após o resultado (pico de investimento).
-// Desligue passando NEXT_PUBLIC_LEAD_CAPTURE=off
-export const ENABLE_LEAD_CAPTURE =
-  process.env.NEXT_PUBLIC_LEAD_CAPTURE !== "off";
-
 // Parâmetros preservados da landing até o checkout
 export const TRACKED_PARAMS = [
   "utm_source",

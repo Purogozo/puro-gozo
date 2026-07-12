@@ -1,16 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import { useQuiz } from "@/lib/store";
 import { SCREENS, resolveContent } from "@/lib/screens";
 import { AB, type Variant } from "@/lib/ab";
-import { ENABLE_LEAD_CAPTURE } from "@/lib/config";
 import { useReducedMotion, pageVariants } from "@/lib/motion";
 import { captureParams, trackEvent, buildCheckoutUrl } from "@/lib/tracking";
 import { ReservoirMeter } from "./ReservoirMeter";
-import { LeadCapture } from "./LeadCapture";
 import { AudioToggle } from "./AudioToggle";
 import { LandingScreen } from "./screens/LandingScreen";
 import { SelectScreen } from "./screens/SelectScreen";
@@ -27,15 +25,12 @@ const NO_METER = new Set(["landing", "loading", "result", "sales"]);
 export function QuizFlow({ variant = "a" }: { variant?: Variant }) {
   const reduced = useReducedMotion();
   const params = useSearchParams();
-  const [showLead, setShowLead] = useState(false);
 
   const index = useQuiz((s) => s.index);
   const hydrated = useQuiz((s) => s.hydrated);
   const path = useQuiz((s) => s.path());
   const profileKey = useQuiz((s) => s.profile());
   const meter = useQuiz((s) => s.meter());
-  const lead = useQuiz((s) => s.lead);
-  const next = useQuiz((s) => s.next);
   const goToScreenId = useQuiz((s) => s.goToScreenId);
   const reset = useQuiz((s) => s.reset);
 
@@ -74,15 +69,6 @@ export function QuizFlow({ variant = "a" }: { variant?: Variant }) {
     window.location.href = url;
   }
 
-  // ao sair do resultado: captura de lead no pico de investimento
-  function leaveResult() {
-    if (ENABLE_LEAD_CAPTURE && !lead) {
-      setShowLead(true);
-    } else {
-      next();
-    }
-  }
-
   // splash enquanto reidrata (evita flash de tela errada)
   if (!hydrated || !screen) {
     return <div className="min-h-dvh w-full bg-indigo" />;
@@ -113,13 +99,7 @@ export function QuizFlow({ variant = "a" }: { variant?: Variant }) {
       case "loading":
         return <LoadingScreen content={content} />;
       case "result":
-        return (
-          <ResultScreen
-            content={content}
-            ctaLabel={AB.resultCta[variant]}
-            onAdvance={leaveResult}
-          />
-        );
+        return <ResultScreen content={content} ctaLabel={AB.resultCta[variant]} />;
       case "sales":
         return <SalesScreen content={content} onCheckout={goCheckout} />;
       case "single":
@@ -158,19 +138,6 @@ export function QuizFlow({ variant = "a" }: { variant?: Variant }) {
         >
           {renderScreen()}
         </motion.div>
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {showLead && (
-          <LeadCapture
-            path={path}
-            profile={profileKey}
-            onDone={() => {
-              setShowLead(false);
-              next();
-            }}
-          />
-        )}
       </AnimatePresence>
     </div>
   );
