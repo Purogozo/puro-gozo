@@ -3,9 +3,9 @@
 // (edite estes valores: não precisa mexer em componentes)
 // ============================================================
 
-// Checkout Hotmart: troque pelo link real do produto
+// Checkout Hotmart: link real do produto (env sobrescreve se precisar)
 export const CHECKOUT_URL =
-  process.env.NEXT_PUBLIC_CHECKOUT_URL ?? "https://pay.hotmart.com/XXXXXXX";
+  process.env.NEXT_PUBLIC_CHECKOUT_URL ?? "https://pay.hotmart.com/R106650092U";
 
 // Endpoint de analytics (screen_view, option_select, etc.)
 export const ANALYTICS_ENDPOINT =
