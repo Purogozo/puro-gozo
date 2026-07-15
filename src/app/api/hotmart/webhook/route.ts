@@ -60,9 +60,15 @@ export async function POST(req: NextRequest) {
   const email = buyer.email as string | undefined;
   const phone = (buyer.checkout_phone ?? buyer.phone) as string | undefined;
 
-  const fullName = ((buyer.name as string | undefined) ?? "").trim();
-  const [firstName, ...rest] = fullName ? fullName.split(/\s+/) : [];
-  const lastName = rest.join(" ");
+  // Hotmart 2.0.0 já manda first_name/last_name separados; usa eles,
+  // com fallback pra quebra do name completo.
+  const nameParts = ((buyer.name as string | undefined) ?? "").trim().split(/\s+/);
+  const firstName =
+    (buyer.first_name as string | undefined)?.trim() || nameParts[0] || "";
+  const lastName =
+    (buyer.last_name as string | undefined)?.trim() ||
+    nameParts.slice(1).join(" ") ||
+    "";
 
   const rawValue = price.value;
   const value =
