@@ -11,6 +11,14 @@ export const CHECKOUT_URL =
 export const ANALYTICS_ENDPOINT =
   process.env.NEXT_PUBLIC_ANALYTICS_ENDPOINT ?? "";
 
+// Meta Pixel — ID único (usado no layout e no mapeamento de eventos)
+export const META_PIXEL_ID =
+  process.env.NEXT_PUBLIC_META_PIXEL_ID ?? "902002282309973";
+
+// Valor da oferta para os eventos do Pixel (Lead / InitiateCheckout)
+export const OFFER_VALUE = 47;
+export const OFFER_CURRENCY = "BRL";
+
 // Parâmetros preservados da landing até o checkout
 export const TRACKED_PARAMS = [
   "utm_source",

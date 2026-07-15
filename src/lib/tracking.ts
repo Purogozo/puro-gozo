@@ -1,6 +1,12 @@
 "use client";
 
-import { ANALYTICS_ENDPOINT, CHECKOUT_URL, TRACKED_PARAMS } from "./config";
+import {
+  ANALYTICS_ENDPOINT,
+  CHECKOUT_URL,
+  OFFER_CURRENCY,
+  OFFER_VALUE,
+  TRACKED_PARAMS,
+} from "./config";
 
 const STORE_KEY = "pg-params";
 
@@ -51,8 +57,117 @@ type EventName =
   | "cta_click"
   | "checkout_redirect";
 
-// Evento de analytics → endpoint configurável (Supabase / Meta CAPI)
+// fbq é injetado pelo script do Meta Pixel no layout (pode não existir em
+// dev/adblock — sempre checar antes de chamar). O 4º argumento (options)
+// carrega o eventID usado na desduplicação com a CAPI (server-side).
+type Fbq = (
+  method: "track" | "trackCustom",
+  event: string,
+  params?: Record<string, unknown>,
+  options?: { eventID?: string }
+) => void;
+
+declare global {
+  interface Window {
+    fbq?: Fbq;
+  }
+}
+
+const CAPI_ENDPOINT = "/api/meta/capi";
+
+// id único por evento; compartilhado entre Pixel e CAPI p/ o Meta desduplicar
+function newEventId(): string {
+  try {
+    if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+  } catch {
+    /* fallback abaixo */
+  }
+  return `${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
+}
+
+// Envia o evento pra CAPI (servidor) com o mesmo event_id do Pixel.
+// keepalive: sobrevive ao redirect do checkout (InitiateCheckout).
+function sendToCapi(
+  eventName: string,
+  eventId: string,
+  customData: Record<string, unknown>
+) {
+  try {
+    fetch(CAPI_ENDPOINT, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        event_name: eventName,
+        event_id: eventId,
+        event_source_url: window.location.href,
+        custom_data: customData,
+      }),
+      keepalive: true,
+    }).catch(() => {});
+  } catch {
+    /* no-op */
+  }
+}
+
+// Mapeia os eventos internos do funil → Meta.
+// Pixel (navegador) + CAPI (servidor) com event_id compartilhado.
+// Padrão (Lead / InitiateCheckout) onde o Meta otimiza; custom no funil.
+function trackPixel(name: EventName, payload: Record<string, unknown>) {
+  if (typeof window === "undefined") return;
+  const fbq = typeof window.fbq === "function" ? window.fbq : undefined;
+  const eventId = newEventId();
+
+  switch (name) {
+    case "screen_view": {
+      const custom = {
+        screen: payload.screen,
+        screen_type: payload.type,
+        path: payload.path,
+        variant: payload.variant,
+      };
+      fbq?.("trackCustom", "QuizStep", custom, { eventID: eventId });
+      sendToCapi("QuizStep", eventId, custom);
+      break;
+    }
+    case "option_select":
+      // alto volume, baixo valor: só Pixel (não vai pra CAPI)
+      fbq?.("trackCustom", "QuizAnswer", { screen: payload.screen });
+      break;
+    case "quiz_complete": {
+      const custom = {
+        content_name: "Quiz Puro Gozo",
+        content_category: payload.path,
+        value: OFFER_VALUE,
+        currency: OFFER_CURRENCY,
+      };
+      fbq?.("track", "Lead", custom, { eventID: eventId });
+      sendToCapi("Lead", eventId, custom);
+      break;
+    }
+    case "checkout_redirect": {
+      const custom = {
+        content_name: "Puro Gozo",
+        content_ids: ["puro-gozo"],
+        content_type: "product",
+        num_items: 1,
+        value: OFFER_VALUE,
+        currency: OFFER_CURRENCY,
+      };
+      fbq?.("track", "InitiateCheckout", custom, { eventID: eventId });
+      sendToCapi("InitiateCheckout", eventId, custom);
+      break;
+    }
+    // cta_click dispara junto com checkout_redirect no mesmo clique —
+    // não mapeamos pra não duplicar o InitiateCheckout.
+    default:
+      break;
+  }
+}
+
+// Evento de analytics → endpoint configurável (Supabase / Meta CAPI) + Meta Pixel
 export function trackEvent(name: EventName, payload: Record<string, unknown> = {}) {
+  trackPixel(name, payload);
+
   const body = JSON.stringify({
     event: name,
     ts: Date.now(),
