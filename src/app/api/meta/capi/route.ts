@@ -5,6 +5,7 @@
 
 import type { NextRequest } from "next/server";
 import {
+  hashExternalId,
   sendCapiEvents,
   userDataFromRequest,
   type CapiEvent,
@@ -27,12 +28,13 @@ export async function POST(req: NextRequest) {
     return Response.json({ ok: false, error: "json inválido" }, { status: 400 });
   }
 
-  const { event_name, event_id, event_source_url, custom_data } =
+  const { event_name, event_id, event_source_url, custom_data, user_data } =
     (payload ?? {}) as {
       event_name?: unknown;
       event_id?: unknown;
       event_source_url?: unknown;
       custom_data?: unknown;
+      user_data?: unknown;
     };
 
   if (typeof event_name !== "string" || !ALLOWED.has(event_name)) {
@@ -41,6 +43,25 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     );
   }
+
+  // Sinais de correspondência: base do servidor (IP/UA/cookies) + o que o
+  // cliente manda (external_id anônimo, fbp/fbc quando o cookie ainda não
+  // chegou ao servidor). external_id é hasheado aqui.
+  const server = userDataFromRequest(req);
+  const client = (user_data && typeof user_data === "object"
+    ? user_data
+    : {}) as { external_id?: unknown; fbp?: unknown; fbc?: unknown };
+
+  const externalIdHash = hashExternalId(
+    typeof client.external_id === "string" ? client.external_id : undefined
+  );
+
+  const mergedUserData = {
+    ...server,
+    fbp: server.fbp ?? (typeof client.fbp === "string" ? client.fbp : undefined),
+    fbc: server.fbc ?? (typeof client.fbc === "string" ? client.fbc : undefined),
+    external_id: externalIdHash ? [externalIdHash] : undefined,
+  };
 
   const custom: Record<string, unknown> =
     custom_data && typeof custom_data === "object"
@@ -59,7 +80,7 @@ export async function POST(req: NextRequest) {
     event_source_url:
       typeof event_source_url === "string" ? event_source_url : undefined,
     action_source: "website",
-    user_data: userDataFromRequest(req),
+    user_data: mergedUserData,
     custom_data: Object.keys(custom).length ? custom : undefined,
   };
 

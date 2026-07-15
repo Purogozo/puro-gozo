@@ -36,12 +36,39 @@ export function hashName(name?: string | null): string | undefined {
   return sha256(name?.trim().toLowerCase() || undefined);
 }
 
+// id anônimo estável (UUID do localStorage no cliente / CPF no Purchase)
+export function hashExternalId(id?: string | null): string | undefined {
+  return sha256(id?.trim().toLowerCase() || undefined);
+}
+
+// Cidade/estado: minúsculo, sem espaços nem pontuação
+function normalizeSpaceless(v?: string | null): string | undefined {
+  return v?.trim().toLowerCase().replace(/\s+/g, "") || undefined;
+}
+export function hashCity(v?: string | null): string | undefined {
+  return sha256(normalizeSpaceless(v));
+}
+export function hashState(v?: string | null): string | undefined {
+  return sha256(normalizeSpaceless(v));
+}
+export function hashZip(v?: string | null): string | undefined {
+  return sha256(v?.trim().toLowerCase().replace(/[\s-]/g, "") || undefined);
+}
+// País: ISO 3166-1 alpha-2 minúsculo (ex.: "BR" → "br")
+export function hashCountry(v?: string | null): string | undefined {
+  return sha256(v?.trim().toLowerCase() || undefined);
+}
+
 // ── Tipos ───────────────────────────────────────────────────
 export interface CapiUserData {
   em?: string[]; // email (hash)
   ph?: string[]; // telefone (hash)
   fn?: string[]; // primeiro nome (hash)
   ln?: string[]; // sobrenome (hash)
+  ct?: string[]; // cidade (hash)
+  st?: string[]; // estado (hash)
+  zp?: string[]; // CEP (hash)
+  country?: string[]; // país ISO2 (hash)
   external_id?: string[]; // id anônimo (hash)
   fbp?: string; // cookie _fbp (NÃO hasheado)
   fbc?: string; // cookie _fbc (NÃO hasheado)

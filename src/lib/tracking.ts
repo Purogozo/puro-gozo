@@ -85,7 +85,53 @@ function newEventId(): string {
   return `${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
 }
 
-// Envia o evento pra CAPI (servidor) com o mesmo event_id do Pixel.
+const EID_KEY = "pg-eid";
+const FBC_KEY = "pg-fbc";
+
+// ID anônimo estável por visitante (localStorage). Melhora a correspondência
+// sem coletar nenhum dado pessoal — vai hasheado no servidor.
+function getExternalId(): string | undefined {
+  try {
+    let eid = localStorage.getItem(EID_KEY);
+    if (!eid) {
+      eid = newEventId();
+      localStorage.setItem(EID_KEY, eid);
+    }
+    return eid;
+  } catch {
+    return undefined;
+  }
+}
+
+function readCookie(name: string): string | undefined {
+  try {
+    const m = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
+    return m ? decodeURIComponent(m[1]) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
+// fbc (ID do clique do anúncio): usa o cookie _fbc; se não existir, constrói a
+// partir do fbclid capturado (formato exigido: fb.1.<ts>.<fbclid>) e memoiza.
+function getFbc(): string | undefined {
+  const cookie = readCookie("_fbc");
+  if (cookie) return cookie;
+  try {
+    const stored = sessionStorage.getItem(FBC_KEY);
+    if (stored) return stored;
+    const fbclid = getParams()["fbclid"];
+    if (!fbclid) return undefined;
+    const fbc = `fb.1.${Date.now()}.${fbclid}`;
+    sessionStorage.setItem(FBC_KEY, fbc);
+    return fbc;
+  } catch {
+    return undefined;
+  }
+}
+
+// Envia o evento pra CAPI (servidor) com o mesmo event_id do Pixel + os sinais
+// de correspondência que o servidor sozinho não tem (external_id, fbp, fbc).
 // keepalive: sobrevive ao redirect do checkout (InitiateCheckout).
 function sendToCapi(
   eventName: string,
@@ -93,6 +139,11 @@ function sendToCapi(
   customData: Record<string, unknown>
 ) {
   try {
+    const userData = {
+      external_id: getExternalId(),
+      fbp: readCookie("_fbp"),
+      fbc: getFbc(),
+    };
     fetch(CAPI_ENDPOINT, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -101,6 +152,7 @@ function sendToCapi(
         event_id: eventId,
         event_source_url: window.location.href,
         custom_data: customData,
+        user_data: userData,
       }),
       keepalive: true,
     }).catch(() => {});

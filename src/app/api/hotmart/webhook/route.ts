@@ -13,9 +13,14 @@
 
 import type { NextRequest } from "next/server";
 import {
+  hashCity,
+  hashCountry,
   hashEmail,
+  hashExternalId,
   hashName,
   hashPhone,
+  hashState,
+  hashZip,
   sendCapiEvents,
   type CapiEvent,
 } from "@/lib/meta-capi";
@@ -56,9 +61,12 @@ export async function POST(req: NextRequest) {
   const purchase = (data.purchase ?? {}) as Record<string, unknown>;
   const price = (purchase.price ?? {}) as Record<string, unknown>;
 
+  const address = (buyer.address ?? {}) as Record<string, unknown>;
+
   const transaction = purchase.transaction as string | undefined;
   const email = buyer.email as string | undefined;
   const phone = (buyer.checkout_phone ?? buyer.phone) as string | undefined;
+  const cpf = buyer.document as string | undefined; // CPF → external_id
 
   // Hotmart 2.0.0 já manda first_name/last_name separados; usa eles,
   // com fallback pra quebra do name completo.
@@ -75,6 +83,17 @@ export async function POST(req: NextRequest) {
     typeof rawValue === "number" ? rawValue : Number(rawValue) || undefined;
   const currency = (price.currency_value as string) ?? OFFER_CURRENCY;
 
+  // hashes pré-computados (a Hotmart manda PII completa → correspondência alta)
+  const em = hashEmail(email);
+  const ph = hashPhone(phone);
+  const fn = hashName(firstName);
+  const ln = hashName(lastName);
+  const ct = hashCity(address.city as string | undefined);
+  const st = hashState(address.state as string | undefined);
+  const zp = hashZip(address.zipcode as string | undefined);
+  const country = hashCountry(address.country_iso as string | undefined);
+  const externalId = hashExternalId(cpf);
+
   const event: CapiEvent = {
     event_name: "Purchase",
     event_time: Math.floor(Date.now() / 1000),
@@ -82,10 +101,15 @@ export async function POST(req: NextRequest) {
     event_id: transaction ? `hotmart_${transaction}` : undefined,
     action_source: "website",
     user_data: {
-      em: hashEmail(email) ? [hashEmail(email)!] : undefined,
-      ph: hashPhone(phone) ? [hashPhone(phone)!] : undefined,
-      fn: hashName(firstName) ? [hashName(firstName)!] : undefined,
-      ln: hashName(lastName) ? [hashName(lastName)!] : undefined,
+      em: em ? [em] : undefined,
+      ph: ph ? [ph] : undefined,
+      fn: fn ? [fn] : undefined,
+      ln: ln ? [ln] : undefined,
+      ct: ct ? [ct] : undefined,
+      st: st ? [st] : undefined,
+      zp: zp ? [zp] : undefined,
+      country: country ? [country] : undefined,
+      external_id: externalId ? [externalId] : undefined,
     },
     custom_data: {
       content_name: "Puro Gozo",
