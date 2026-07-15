@@ -26,6 +26,11 @@ export const metadata: Metadata = {
   description:
     "Uma avaliação de 2 minutos, criada por uma sexóloga, que identifica por que você perdeu a vontade e te mostra o caminho de volta ao prazer.",
   robots: { index: false, follow: false },
+  verification: {
+    other: {
+      "facebook-domain-verification": "uw5wpsaoliktox8vbwblc593hckm0t",
+    },
+  },
 };
 
 export const viewport: Viewport = {
