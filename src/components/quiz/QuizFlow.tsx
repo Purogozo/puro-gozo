@@ -44,6 +44,17 @@ export function QuizFlow({ variant = "a" }: { variant?: Variant }) {
     captureParams();
   }, []);
 
+  // Rede de segurança do hydrated.
+  // Quando o storage está indisponível (navegação privada restrita, storage
+  // bloqueado), o persist do zustand retorna ANTES de registrar a reidratação
+  // e o onRehydrateStorage nunca dispara — hydrated ficaria false pra sempre e
+  // a pessoa veria o splash índigo em branco, sem nunca entrar no quiz.
+  // Este efeito só roda no cliente, depois da montagem: se a reidratação já
+  // aconteceu, é no-op; se não aconteceu, destrava a tela.
+  useEffect(() => {
+    if (!useQuiz.getState().hydrated) useQuiz.getState().setHydrated();
+  }, []);
+
   // jump de preview (?screen=N) e reset (?reset=1)
   useEffect(() => {
     if (!hydrated) return;

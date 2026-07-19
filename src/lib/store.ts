@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
 import type { Path, Profile } from "./types";
 import {
   SCREENS,
@@ -67,6 +67,19 @@ export const useQuiz = create<QuizState>()(
     }),
     {
       name: "pg-quiz-v1",
+      // sessionStorage, NÃO localStorage: quem entra de novo recomeça do zero.
+      // Antes o estado sobrevivia a fechar o navegador e a pessoa voltava
+      // caída na mesma tela, sem como reiniciar.
+      //
+      // Recarregar a página NÃO perde o progresso — sessionStorage sobrevive a
+      // F5 dentro da mesma aba. O que zera é abrir de novo depois de fechar,
+      // ou abrir em outra aba, que é o que significa "entrar de novo".
+      //
+      // Bônus: alinha o estado do quiz com o session_id do analytics (pg-sid,
+      // também em sessionStorage). Antes eram descasados, e quem voltava dias
+      // depois gerava uma sessão nova no dashboard começando na tela 15 — o
+      // funil registrava entradas no meio do quiz.
+      storage: createJSONStorage(() => sessionStorage),
       partialize: (s) => ({
         index: s.index,
         answers: s.answers,
