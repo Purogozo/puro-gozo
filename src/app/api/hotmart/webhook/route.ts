@@ -133,8 +133,19 @@ async function recordPurchase(
   await sbUpsert("pg_purchases", row, "transaction");
 }
 
-// Status que contam como compra efetivada
-const APPROVED_EVENTS = new Set(["PURCHASE_APPROVED", "PURCHASE_COMPLETE"]);
+// Status que dispara o Purchase pro Meta.
+//
+// ⚠️ SÓ PURCHASE_APPROVED. Antes PURCHASE_COMPLETE também estava aqui, e isso
+// contava a MESMA venda duas vezes: os dois eventos usam o mesmo
+// event_id (`hotmart_<transaction>`), mas o COMPLETE só chega quando acaba o
+// prazo de garantia — semanas depois. A desduplicação da Meta por event_id
+// tem janela curta, então o segundo evento entrava como conversão nova e
+// inflava faturamento e ROAS.
+//
+// PURCHASE_COMPLETE continua sendo gravado no Supabase (cai no ramo de baixo),
+// onde o upsert por transaction atualiza a linha existente em vez de criar
+// outra — o dashboard segue contando a venda uma vez só.
+const META_PURCHASE_EVENTS = new Set(["PURCHASE_APPROVED"]);
 
 export async function POST(req: NextRequest) {
   let payload: Record<string, unknown>;
@@ -152,11 +163,13 @@ export async function POST(req: NextRequest) {
   }
 
   const eventType = payload.event as string | undefined;
-  if (!eventType || !APPROVED_EVENTS.has(eventType)) {
-    // Não vai pro Meta (só compra aprovada vira Purchase), MAS vai pro
-    // dashboard: reembolso e chargeback precisam abater a receita, senão o
-    // número exibido é bruto pra sempre. O upsert por transaction atualiza a
-    // linha que o APPROVED criou.
+  if (!eventType || !META_PURCHASE_EVENTS.has(eventType)) {
+    // Não vai pro Meta, MAS vai pro dashboard. Cai aqui:
+    //   · PURCHASE_COMPLETE  → mesma venda já contada no APPROVED
+    //   · REFUNDED/CHARGEBACK → precisam abater a receita, senão o número
+    //     exibido fica bruto pra sempre
+    //   · BILLET_PRINTED, PIX gerado, EXPIRED… → não são pagamento
+    // O upsert por transaction atualiza a linha que o APPROVED criou.
     if (eventType) {
       try {
         const d = (payload.data ?? {}) as Record<string, unknown>;
