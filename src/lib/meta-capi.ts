@@ -120,11 +120,31 @@ export interface CapiEvent {
   custom_data?: Record<string, unknown>;
 }
 
+// IP real do visitante.
+//
+// ⚠️ NÃO usar `x-forwarded-for` direto. Este site fica atrás da Cloudflare, e
+// medido em produção o primeiro item do XFF vinha como IP da BORDA da
+// Cloudflare (172.71.x.x), não o do visitante. Gravar isso é pior que não
+// gravar: todos os visitantes apareceriam vindo dos mesmos poucos IPs, o que
+// degrada a correspondência da Meta em vez de melhorar.
+//
+// Ordem: cabeçalho canônico da Cloudflare → variantes → XFF como último
+// recurso (e aí sim o primeiro da cadeia é o cliente).
+export function clientIpFromRequest(req: NextRequest): string | undefined {
+  const direto =
+    req.headers.get("cf-connecting-ip") ??
+    req.headers.get("true-client-ip") ??
+    req.headers.get("x-real-ip");
+  if (direto?.trim()) return direto.trim();
+
+  const fwd = req.headers.get("x-forwarded-for") ?? "";
+  return fwd.split(",")[0]?.trim() || undefined;
+}
+
 // Monta os sinais de correspondência a partir do request do navegador
 // (IP, user-agent, cookies do Pixel). Sem PII — o quiz não coleta lead.
 export function userDataFromRequest(req: NextRequest): CapiUserData {
-  const fwd = req.headers.get("x-forwarded-for") ?? "";
-  const client_ip_address = fwd.split(",")[0]?.trim() || undefined;
+  const client_ip_address = clientIpFromRequest(req);
   const client_user_agent = req.headers.get("user-agent") ?? undefined;
   const fbp = req.cookies.get("_fbp")?.value;
   const fbc = req.cookies.get("_fbc")?.value;

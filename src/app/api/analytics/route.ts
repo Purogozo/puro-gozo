@@ -10,6 +10,7 @@
 
 import type { NextRequest } from "next/server";
 import { sbInsert, sbRpc, supabaseReady } from "@/lib/supabase";
+import { clientIpFromRequest } from "@/lib/meta-capi";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -69,10 +70,9 @@ export async function POST(req: NextRequest) {
     typeof body.ts === "number" ? new Date(body.ts).toISOString() : null;
 
   // IP e user-agent saem do REQUEST, nunca do corpo — senão o cliente forjaria.
-  // x-forwarded-for pode vir encadeado ("cliente, proxy1, proxy2"): o primeiro
-  // é o do visitante.
-  const clientIp =
-    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
+  // O helper trata a Cloudflare na frente do site: o x-forwarded-for sozinho
+  // devolvia o IP da BORDA, não o do visitante (ver nota em meta-capi.ts).
+  const clientIp = clientIpFromRequest(req) ?? null;
   const userAgent = req.headers.get("user-agent")?.slice(0, 400) ?? null;
 
   // Cada destino em try/catch próprio: uma falha não impede a outra escrita.
