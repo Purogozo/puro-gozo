@@ -7,9 +7,11 @@
 export const CHECKOUT_URL =
   process.env.NEXT_PUBLIC_CHECKOUT_URL ?? "https://pay.hotmart.com/R106650092U";
 
-// Endpoint de analytics (screen_view, option_select, etc.)
+// Endpoint de analytics (screen_view, option_select, etc.) → Supabase.
+// Default aponta pra rota interna: em produção funciona sem env nenhuma.
+// Defina como "" pra desligar a ingestão (eventos vão pro console em dev).
 export const ANALYTICS_ENDPOINT =
-  process.env.NEXT_PUBLIC_ANALYTICS_ENDPOINT ?? "";
+  process.env.NEXT_PUBLIC_ANALYTICS_ENDPOINT ?? "/api/analytics";
 
 // Meta Pixel — ID único (usado no layout e no mapeamento de eventos)
 export const META_PIXEL_ID =

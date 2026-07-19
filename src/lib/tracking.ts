@@ -87,10 +87,12 @@ function newEventId(): string {
 
 const EID_KEY = "pg-eid";
 const FBC_KEY = "pg-fbc";
+const SID_KEY = "pg-sid";
 
 // ID anônimo estável por visitante (localStorage). Melhora a correspondência
 // sem coletar nenhum dado pessoal — vai hasheado no servidor.
-function getExternalId(): string | undefined {
+// Também serve de visitor_id no dashboard: liga várias sessões da mesma pessoa.
+export function getExternalId(): string | undefined {
   try {
     let eid = localStorage.getItem(EID_KEY);
     if (!eid) {
@@ -100,6 +102,33 @@ function getExternalId(): string | undefined {
     return eid;
   } catch {
     return undefined;
+  }
+}
+
+// ID de uma EXECUÇÃO do quiz (sessionStorage). Distinto do visitor_id: o store
+// do quiz persiste em localStorage, então quem volta dias depois é o mesmo
+// visitante numa sessão nova. É o session_id que dá sentido ao funil — sem ele
+// dá pra contar views por tela, mas não "de 100 que entraram, X chegaram na T19".
+export function getSessionId(): string | undefined {
+  try {
+    let sid = sessionStorage.getItem(SID_KEY);
+    if (!sid) {
+      sid = newEventId();
+      sessionStorage.setItem(SID_KEY, sid);
+    }
+    return sid;
+  } catch {
+    return undefined;
+  }
+}
+
+// Navegação por ?screen=N é preview interno (nós testando), não visita real.
+// Marcado na origem pra não sujar o funil — as views filtram is_preview.
+function isPreview(): boolean {
+  try {
+    return new URLSearchParams(window.location.search).has("screen");
+  } catch {
+    return false;
   }
 }
 
@@ -220,10 +249,15 @@ function trackPixel(name: EventName, payload: Record<string, unknown>) {
 export function trackEvent(name: EventName, payload: Record<string, unknown> = {}) {
   trackPixel(name, payload);
 
+  // session_id/visitor_id são o que torna o funil calculável; utm fica num
+  // objeto próprio (e não espalhado na raiz) pra rota mapear sem ambiguidade.
   const body = JSON.stringify({
     event: name,
     ts: Date.now(),
-    ...getParams(),
+    session_id: getSessionId(),
+    visitor_id: getExternalId(),
+    preview: isPreview(),
+    utm: getParams(),
     ...payload,
   });
   if (!ANALYTICS_ENDPOINT) {

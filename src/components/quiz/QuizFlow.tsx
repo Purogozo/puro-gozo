@@ -7,7 +7,12 @@ import { useQuiz } from "@/lib/store";
 import { SCREENS, resolveContent } from "@/lib/screens";
 import { AB, type Variant } from "@/lib/ab";
 import { useReducedMotion, pageVariants } from "@/lib/motion";
-import { captureParams, trackEvent, buildCheckoutUrl } from "@/lib/tracking";
+import {
+  captureParams,
+  trackEvent,
+  buildCheckoutUrl,
+  getSessionId,
+} from "@/lib/tracking";
 import { ReservoirMeter } from "./ReservoirMeter";
 import { AudioToggle } from "./AudioToggle";
 import { LandingScreen } from "./screens/LandingScreen";
@@ -65,7 +70,13 @@ export function QuizFlow({ variant = "a" }: { variant?: Variant }) {
   function goCheckout() {
     trackEvent("cta_click", { screen: 20, path, profile: profileKey, variant });
     trackEvent("checkout_redirect", { path, profile: profileKey, variant });
-    const url = buildCheckoutUrl({ xcod: `${path}_${profileKey}_${variant}` });
+    // o session_id viaja no xcod até a Hotmart e volta no webhook — é o que
+    // liga a venda à sessão de quiz que a gerou (receita por perfil/variante
+    // com dado próprio, sem depender da atribuição do Meta).
+    const sid = getSessionId() ?? "";
+    const url = buildCheckoutUrl({
+      xcod: `${path}_${profileKey}_${variant}${sid ? `_${sid}` : ""}`,
+    });
     window.location.href = url;
   }
 
