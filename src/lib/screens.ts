@@ -37,10 +37,13 @@ export const SCREENS: Screen[] = [
     intimate: true,
     universal: {
       eyebrow: "Avaliação · por uma sexóloga",
+      // Suavizado em 19/07/2026 — ver nota em ab.ts (landingHeadline).
+      // Esta headline é o fallback; o A/B em ab.ts sobrescreve na T1.
+      // Mantenha as duas em sincronia.
       headline:
-        "Descubra o que apagou o seu desejo sexual e receba o método de uma sexóloga pra você voltar a sentir tesão de verdade.",
+        "Descubra o que apagou o seu desejo e receba o método de uma sexóloga pra você voltar a sentir vontade de novo.",
       subhead:
-        "Uma avaliação de 2 minutos, criada por uma sexóloga, que identifica por que você perdeu a vontade de transar e te mostra o caminho pra voltar a sentir prazer de verdade, sozinha ou na cama com alguém.",
+        "Uma avaliação de 2 minutos, criada por uma sexóloga, que identifica por que o seu desejo diminuiu e te mostra o caminho de volta — sozinha ou a dois.",
       cta: "COMEÇAR MINHA AVALIAÇÃO",
     },
   },
