@@ -21,11 +21,27 @@ const jost = Jost({
   display: "swap",
 });
 
+// ⚠️ REGISTRO CLÍNICO PROPOSITAL — não "melhorar" com copy de venda.
+// O quiz renderiza no cliente, então o <body> servido é VAZIO: title,
+// description e Open Graph são o ÚNICO texto que o rastreador da Meta lê pra
+// classificar o domínio. Em 07/2026 o domínio foi marcado como "Conteúdo
+// inadequado", o que restringe compartilhamento de dados e entrega de anúncio.
+// Estas tags existem pra descrever o produto como saúde sexual, que é o que
+// ele é. A copy crua vive nas telas do funil (screens.ts) e continua intacta.
 export const metadata: Metadata = {
-  title: "Avaliação Puro Gozo · Descubra o que apagou o seu desejo",
+  title: "Avaliação de Saúde Sexual Feminina · Puro Gozo",
   description:
-    "Uma avaliação de 2 minutos, criada por uma sexóloga, que identifica por que você perdeu a vontade e te mostra o caminho de volta ao prazer.",
+    "Questionário de autoavaliação desenvolvido por uma sexóloga para mulheres que perderam o interesse na vida íntima. Resultado em 2 minutos.",
   robots: { index: false, follow: false },
+  openGraph: {
+    title: "Avaliação de Saúde Sexual Feminina · Puro Gozo",
+    description:
+      "Questionário de autoavaliação desenvolvido por uma sexóloga para mulheres que perderam o interesse na vida íntima. Resultado em 2 minutos.",
+    type: "website",
+    locale: "pt_BR",
+    siteName: "Puro Gozo",
+    url: "https://www.purogozo.com",
+  },
   verification: {
     other: {
       "facebook-domain-verification": "uw5wpsaoliktox8vbwblc593hckm0t",
