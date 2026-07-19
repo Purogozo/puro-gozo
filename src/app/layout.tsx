@@ -39,7 +39,8 @@ export const metadata: Metadata = {
       "Autoavaliação desenvolvida por uma sexóloga para mulheres que perderam o interesse na vida íntima. Resultado em 2 minutos.",
     type: "website",
     locale: "pt_BR",
-    siteName: "Puro Gozo",
+    // siteName omitido de propósito: era a última ocorrência do nome da marca
+    // em texto que o rastreador lê. Sobra só o domínio, em og:url.
     url: "https://www.purogozo.com",
   },
   verification: {
