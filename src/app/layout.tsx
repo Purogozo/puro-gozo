@@ -29,14 +29,14 @@ const jost = Jost({
 // Estas tags existem pra descrever o produto como saúde sexual, que é o que
 // ele é. A copy crua vive nas telas do funil (screens.ts) e continua intacta.
 export const metadata: Metadata = {
-  title: "Avaliação de Saúde Sexual Feminina · Puro Gozo",
+  title: "Avaliação de Saúde Sexual Feminina",
   description:
-    "Questionário de autoavaliação desenvolvido por uma sexóloga para mulheres que perderam o interesse na vida íntima. Resultado em 2 minutos.",
+    "Autoavaliação desenvolvida por uma sexóloga para mulheres que perderam o interesse na vida íntima. Resultado em 2 minutos.",
   robots: { index: false, follow: false },
   openGraph: {
-    title: "Avaliação de Saúde Sexual Feminina · Puro Gozo",
+    title: "Avaliação de Saúde Sexual Feminina",
     description:
-      "Questionário de autoavaliação desenvolvido por uma sexóloga para mulheres que perderam o interesse na vida íntima. Resultado em 2 minutos.",
+      "Autoavaliação desenvolvida por uma sexóloga para mulheres que perderam o interesse na vida íntima. Resultado em 2 minutos.",
     type: "website",
     locale: "pt_BR",
     siteName: "Puro Gozo",
