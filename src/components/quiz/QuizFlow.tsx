@@ -44,6 +44,19 @@ export function QuizFlow({ variant = "a" }: { variant?: Variant }) {
     captureParams();
   }, []);
 
+  // Limpeza do estado legado.
+  // Até 19/07/2026 o quiz persistia em localStorage. Quem já tinha entrado
+  // ficou com um "pg-quiz-v1" órfão lá — ninguém mais lê, mas é dado morto no
+  // navegador da pessoa (e confundiria quem for depurar isso no futuro).
+  // Some sozinho na primeira visita depois do deploy.
+  useEffect(() => {
+    try {
+      localStorage.removeItem("pg-quiz-v1");
+    } catch {
+      /* storage bloqueado: nada a limpar */
+    }
+  }, []);
+
   // Rede de segurança do hydrated.
   // Quando o storage está indisponível (navegação privada restrita, storage
   // bloqueado), o persist do zustand retorna ANTES de registrar a reidratação
