@@ -68,6 +68,13 @@ export async function POST(req: NextRequest) {
   const clientTs =
     typeof body.ts === "number" ? new Date(body.ts).toISOString() : null;
 
+  // IP e user-agent saem do REQUEST, nunca do corpo — senão o cliente forjaria.
+  // x-forwarded-for pode vir encadeado ("cliente, proxy1, proxy2"): o primeiro
+  // é o do visitante.
+  const clientIp =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || null;
+  const userAgent = req.headers.get("user-agent")?.slice(0, 400) ?? null;
+
   // Cada destino em try/catch próprio: uma falha não impede a outra escrita.
   try {
     await sbInsert("pg_events", {
@@ -83,7 +90,7 @@ export async function POST(req: NextRequest) {
       option: asText(body.option, 200),
       options: Array.isArray(body.options) ? body.options : null,
       utm,
-      user_agent: req.headers.get("user-agent")?.slice(0, 400) ?? null,
+      user_agent: userAgent,
       is_preview: isPreview,
     });
   } catch (err) {
@@ -103,6 +110,15 @@ export async function POST(req: NextRequest) {
         p_utm: utm,
         p_completed: event === "quiz_complete",
         p_checkout: event === "checkout_redirect",
+        // Ponte de identidade: guardados aqui pra reidratar o Purchase quando
+        // o webhook da Hotmart chegar, horas depois e sem navegador.
+        // O IP vem do header do PROXY (x-forwarded-for), não do corpo — o
+        // cliente não deve poder forjar o próprio IP.
+        p_fbp: asText(body.fbp, 200),
+        p_fbc: asText(body.fbc, 400),
+        p_client_ip: clientIp,
+        p_user_agent: userAgent,
+        p_landing_url: asText(body.landing_url, 800),
       });
     } catch (err) {
       console.error("[analytics] upsert sessão:", err);

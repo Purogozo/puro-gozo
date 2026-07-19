@@ -9,7 +9,10 @@ import crypto from "node:crypto";
 import type { NextRequest } from "next/server";
 import { META_PIXEL_ID } from "./config";
 
-const GRAPH_VERSION = process.env.META_GRAPH_VERSION ?? "v21.0";
+// v25.0 (18/02/2026) é a atual. A v21.0 é de out/2024 e, pela política
+// histórica de ~2 anos por versão, está entrando na faixa de descontinuação.
+// O contrato de /{PIXEL_ID}/events é estável entre versões.
+const GRAPH_VERSION = process.env.META_GRAPH_VERSION ?? "v25.0";
 const CAPI_TOKEN = process.env.META_CAPI_TOKEN ?? "";
 // Código da aba "Testar eventos" do Events Manager (deixe vazio em produção)
 const TEST_EVENT_CODE = process.env.META_TEST_EVENT_CODE ?? "";
@@ -26,14 +29,41 @@ export function hashEmail(email?: string | null): string | undefined {
   return sha256(email?.trim().toLowerCase() || undefined);
 }
 
+// Remove acentos (NFD separa a letra do diacrítico; a faixa U+0300–U+036F são
+// as marcas combinantes).
+//
+// ⚠️ INFERÊNCIA, não regra explícita da Meta. A doc diz apenas que "usar
+// caracteres a-z do alfabeto romano é recomendado" e que caracteres especiais
+// devem estar em UTF-8 — ela NÃO manda remover diacríticos. Como sha256("josé")
+// ≠ sha256("jose"), a escolha importa e não dá pra acertar as duas. Seguimos a
+// recomendação explícita (a-z) e aplicamos a MESMA função em todos os campos e
+// nas duas pontas, o que ao menos garante consistência interna.
+function deburr(v: string): string {
+  return v.normalize("NFD").replace(/[̀-ͯ]/g, "");
+}
+
+// Regra da Meta: "Remove symbols, letters, and any leading zeros. Phone numbers
+// must include a country code to be used for matching."
+// Brasil: (11) 98765-4321 → 5511987654321. Sem "+".
 export function hashPhone(phone?: string | null): string | undefined {
   if (!phone) return undefined;
-  const digits = phone.replace(/\D/g, ""); // só dígitos, com DDI
-  return sha256(digits || undefined);
+  let digits = phone.replace(/\D/g, "");
+  digits = digits.replace(/^0+/, ""); // "remove any leading zeros" (DDD 011 → 11)
+  if (!digits) return undefined;
+
+  // Sem código de país o hash não bate com o cadastro da Meta e o sinal é
+  // perdido em silêncio. Número nacional brasileiro tem 10 (fixo) ou 11
+  // (celular) dígitos; nesse caso prefixamos 55. Se já começa com 55 e tem
+  // comprimento de número BR completo (12-13), assumimos que o DDI já veio.
+  if (digits.length === 10 || digits.length === 11) digits = "55" + digits;
+
+  return sha256(digits);
 }
 
 export function hashName(name?: string | null): string | undefined {
-  return sha256(name?.trim().toLowerCase() || undefined);
+  // "Lowercase only with no punctuation."
+  const v = name ? deburr(name.trim().toLowerCase()).replace(/[^a-z]/g, "") : "";
+  return sha256(v || undefined);
 }
 
 // id anônimo estável (UUID do localStorage no cliente / CPF no Purchase)
@@ -41,9 +71,11 @@ export function hashExternalId(id?: string | null): string | undefined {
   return sha256(id?.trim().toLowerCase() || undefined);
 }
 
-// Cidade/estado: minúsculo, sem espaços nem pontuação
+// Cidade/estado: "Lowercase only with no punctuation, no special characters,
+// and no spaces." → "São Paulo" vira "saopaulo".
 function normalizeSpaceless(v?: string | null): string | undefined {
-  return v?.trim().toLowerCase().replace(/\s+/g, "") || undefined;
+  if (!v) return undefined;
+  return deburr(v.trim().toLowerCase()).replace(/[^a-z0-9]/g, "") || undefined;
 }
 export function hashCity(v?: string | null): string | undefined {
   return sha256(normalizeSpaceless(v));
@@ -51,6 +83,8 @@ export function hashCity(v?: string | null): string | undefined {
 export function hashState(v?: string | null): string | undefined {
   return sha256(normalizeSpaceless(v));
 }
+// "Use lowercase with no spaces and no dash." A regra de truncar nos 5
+// primeiros dígitos vale SÓ para os EUA — CEP brasileiro vai com os 8.
 export function hashZip(v?: string | null): string | undefined {
   return sha256(v?.trim().toLowerCase().replace(/[\s-]/g, "") || undefined);
 }

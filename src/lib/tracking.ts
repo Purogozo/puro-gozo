@@ -251,6 +251,12 @@ export function trackEvent(name: EventName, payload: Record<string, unknown> = {
 
   // session_id/visitor_id são o que torna o funil calculável; utm fica num
   // objeto próprio (e não espalhado na raiz) pra rota mapear sem ambiguidade.
+  //
+  // fbp/fbc/landing_url viajam junto pra serem PERSISTIDOS na sessão. Não é
+  // duplicação do que já vai pra CAPI: o Purchase chega horas depois, pelo
+  // webhook da Hotmart, sem navegador nenhum na requisição. Sem guardar esses
+  // sinais agora, o evento de compra sai sem fbp, fbc, IP e user-agent — que
+  // estão entre os de maior peso na correspondência da Meta.
   const body = JSON.stringify({
     event: name,
     ts: Date.now(),
@@ -258,6 +264,9 @@ export function trackEvent(name: EventName, payload: Record<string, unknown> = {
     visitor_id: getExternalId(),
     preview: isPreview(),
     utm: getParams(),
+    fbp: readCookie("_fbp"),
+    fbc: getFbc(),
+    landing_url: window.location.href,
     ...payload,
   });
   if (!ANALYTICS_ENDPOINT) {

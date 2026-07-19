@@ -13,6 +13,7 @@ import {
   buildCheckoutUrl,
   getSessionId,
 } from "@/lib/tracking";
+import { uuidToShortId } from "@/lib/shortid";
 import { ReservoirMeter } from "./ReservoirMeter";
 import { AudioToggle } from "./AudioToggle";
 import { LandingScreen } from "./screens/LandingScreen";
@@ -94,13 +95,18 @@ export function QuizFlow({ variant = "a" }: { variant?: Variant }) {
   function goCheckout() {
     trackEvent("cta_click", { screen: 20, path, profile: profileKey, variant });
     trackEvent("checkout_redirect", { path, profile: profileKey, variant });
-    // o session_id viaja no xcod até a Hotmart e volta no webhook — é o que
-    // liga a venda à sessão de quiz que a gerou (receita por perfil/variante
-    // com dado próprio, sem depender da atribuição do Meta).
-    const sid = getSessionId() ?? "";
-    const url = buildCheckoutUrl({
-      xcod: `${path}_${profileKey}_${variant}${sid ? `_${sid}` : ""}`,
-    });
+    // O session_id viaja no xcod até a Hotmart e volta no webhook — é o que
+    // liga a venda à sessão de quiz que a gerou e permite reidratar o Purchase
+    // com fbp/fbc/IP/user-agent guardados no Supabase.
+    //
+    // ⚠️ Vai SÓ o id, em 24 caracteres alfanuméricos. A versão anterior mandava
+    // `path_perfil_variante_uuid` (56 chars, com underscore) — a Hotmart
+    // documenta máximo de 30 caracteres e PROÍBE underscore nos parâmetros de
+    // origem, então aquilo era truncado ou descartado em silêncio.
+    // path/perfil/variante não se perdem: são lidos de pg_sessions pelo id.
+    const sid = getSessionId();
+    const short = sid ? uuidToShortId(sid) : null;
+    const url = buildCheckoutUrl(short ? { xcod: short } : undefined);
     window.location.href = url;
   }
 
