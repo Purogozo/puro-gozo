@@ -10,6 +10,28 @@ import {
 
 const STORE_KEY = "pg-params";
 
+// utm_source nunca vazio. Precedência (padrão de mídia BR): utm_source da URL →
+// utm_source do referrer → hostname do referrer → "direto". Assim tráfego
+// orgânico/direto chega ao checkout com uma origem legível em vez de vazio.
+// Roda só na entrada da sessão (SPA de rota única); o guard "!existing" no
+// captureParams garante que não é sobrescrito depois.
+function resolveUtmSource(url: URLSearchParams): string {
+  const fromUrl = url.get("utm_source");
+  if (fromUrl) return fromUrl;
+  const ref = document.referrer;
+  if (ref) {
+    try {
+      const refUrl = new URL(ref);
+      return (
+        new URLSearchParams(refUrl.search).get("utm_source") || refUrl.hostname
+      );
+    } catch {
+      /* referrer malformado — ignora */
+    }
+  }
+  return "direto";
+}
+
 // Captura UTMs / click IDs da URL e persiste por sessão (hydration-safe:
 // chamado em useEffect, nunca durante o render)
 export function captureParams() {
@@ -24,6 +46,11 @@ export function captureParams() {
         existing[key] = v;
         changed = true;
       }
+    }
+    // Fallback de origem: se nada trouxe utm_source, deriva do referrer.
+    if (!existing["utm_source"]) {
+      existing["utm_source"] = resolveUtmSource(url);
+      changed = true;
     }
     if (changed) sessionStorage.setItem(STORE_KEY, JSON.stringify(existing));
   } catch {
