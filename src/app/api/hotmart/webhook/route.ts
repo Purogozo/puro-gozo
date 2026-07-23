@@ -303,6 +303,28 @@ async function processEvent(payload: Record<string, unknown>) {
     typeof rawValue === "number" ? rawValue : Number(rawValue) || undefined;
   const currency = (price.currency_value as string) ?? OFFER_CURRENCY;
 
+  // event_time = hora REAL da aprovação (Hotmart `data.purchase.approved_date`),
+  // não a hora em que o webhook chegou aqui. O webhook pode atrasar (fila,
+  // retentativas), e usar Date.now() jogaria a conversão pra frente no tempo,
+  // degradando a atribuição. approved_date vem em epoch ms; tratamos ms OU s.
+  // Trava: a Meta rejeita o lote inteiro se event_time for >7 dias no passado
+  // ou no futuro — fora da janela, caímos no relógio atual (seguro).
+  const nowSec = Math.floor(Date.now() / 1000);
+  const SEVEN_DAYS_SEC = 7 * 24 * 60 * 60;
+  const rawApproved = purchase.approved_date;
+  const approvedMs =
+    typeof rawApproved === "number" ? rawApproved : Number(rawApproved);
+  let eventTime = nowSec;
+  if (Number.isFinite(approvedMs) && approvedMs > 0) {
+    // >1e12 ≈ está em milissegundos; senão já veio em segundos.
+    const approvedSec =
+      approvedMs > 1e12 ? Math.floor(approvedMs / 1000) : Math.floor(approvedMs);
+    // 60s de folga pra clock skew; nunca no futuro, nunca >7 dias atrás.
+    if (approvedSec <= nowSec + 60 && approvedSec >= nowSec - SEVEN_DAYS_SEC) {
+      eventTime = approvedSec;
+    }
+  }
+
   // hashes pré-computados (a Hotmart manda PII completa → correspondência alta)
   const em = hashEmail(email);
   const ph = hashPhone(phone);
@@ -333,7 +355,9 @@ async function processEvent(payload: Record<string, unknown>) {
 
   const event: CapiEvent = {
     event_name: "Purchase",
-    event_time: Math.floor(Date.now() / 1000),
+    // Hora real da aprovação (ver derivação de eventTime acima), com fallback
+    // pro relógio atual se approved_date vier ausente/fora da janela da Meta.
+    event_time: eventTime,
     // event_id estável por compra → desduplica com qualquer Pixel de obrigado
     // e também com as até 5 reentregas do próprio webhook da Hotmart.
     event_id: transaction ? `hotmart_${transaction}` : undefined,
