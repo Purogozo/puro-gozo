@@ -5,8 +5,10 @@
 import { Suspense } from "react";
 import { isAuthenticated } from "@/lib/dashboard-auth";
 import { sbRpcRows, supabaseReady } from "@/lib/supabase";
+import { fetchDailySpend, metaAdsReady } from "@/lib/meta-ads";
 import LoginForm from "./LoginForm";
 import DateFilter from "./DateFilter";
+import SalesChart, { type DayPoint } from "./SalesChart";
 import { logout } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -57,13 +59,36 @@ const brDateStr = (d: Date) =>
 const brMidnight = (dateStr: string) => new Date(`${dateStr}T00:00:00${BR}`);
 const addDays = (d: Date, n: number) => new Date(d.getTime() + n * 86_400_000);
 
+// Lista de dias YYYY-MM-DD (fuso Brasília) de sinceDay até untilDay, inclusive.
+function daysBetween(since: string, until: string): string[] {
+  const out: string[] = [];
+  let d = brMidnight(since);
+  const end = brMidnight(until);
+  let guard = 0;
+  while (d.getTime() <= end.getTime() && guard++ < 400) {
+    out.push(brDateStr(d));
+    d = addDays(d, 1);
+  }
+  return out;
+}
+
+// Resolve o intervalo: `from`/`to` são instantes ISO (UTC) pros filtros do
+// Postgres [from, to); `sinceDay`/`untilDay` são as datas YYYY-MM-DD (Brasília)
+// pra API de Ads e pra montar o eixo X do gráfico.
 function resolveRange(sp: Record<string, string | undefined>) {
   const now = new Date();
   const hoje = brDateStr(now);
   const key = sp.range ?? "7d";
 
   if (key === "hoje") {
-    return { key, label: "Hoje", from: brMidnight(hoje).toISOString(), to: now.toISOString() };
+    return {
+      key,
+      label: "Hoje",
+      from: brMidnight(hoje).toISOString(),
+      to: now.toISOString(),
+      sinceDay: hoje,
+      untilDay: hoje,
+    };
   }
   if (key === "mes") {
     const primeiro = `${hoje.slice(0, 7)}-01`;
@@ -72,25 +97,30 @@ function resolveRange(sp: Record<string, string | undefined>) {
       label: "Mês atual",
       from: brMidnight(primeiro).toISOString(),
       to: now.toISOString(),
+      sinceDay: primeiro,
+      untilDay: hoje,
     };
   }
   if (key === "custom" && sp.from && sp.to) {
+    const [a, b] = sp.from <= sp.to ? [sp.from, sp.to] : [sp.to, sp.from];
     return {
       key,
-      label: `${sp.from.split("-").reverse().join("/")} → ${sp.to
-        .split("-")
-        .reverse()
-        .join("/")}`,
-      from: brMidnight(sp.from).toISOString(),
-      to: addDays(brMidnight(sp.to), 1).toISOString(), // fim do dia inclusivo
+      label: `${a.split("-").reverse().join("/")} → ${b.split("-").reverse().join("/")}`,
+      from: brMidnight(a).toISOString(),
+      to: addDays(brMidnight(b), 1).toISOString(), // fim do dia inclusivo
+      sinceDay: a,
+      untilDay: b,
     };
   }
   // padrão: últimos 7 dias (hoje + 6 anteriores)
+  const seteDiasAtras = brDateStr(addDays(brMidnight(hoje), -6));
   return {
     key: "7d",
     label: "Últimos 7 dias",
     from: addDays(brMidnight(hoje), -6).toISOString(),
     to: now.toISOString(),
+    sinceDay: seteDiasAtras,
+    untilDay: hoje,
   };
 }
 
@@ -122,14 +152,35 @@ export default async function DashboardPage({
   const range = resolveRange(sp);
   const args = { p_from: range.from, p_to: range.to };
 
-  // Consultas em paralelo — nenhuma depende da outra.
-  const [overviewRows, funil, variantes, vendas, status] = await Promise.all([
+  // Consultas em paralelo — nenhuma depende da outra. O gasto de anúncio vem da
+  // Meta Ads API (best-effort: falha → mapa vazio, investimento 0).
+  const [overviewRows, funil, variantes, vendas, status, gasto] = await Promise.all([
     sbRpcRows<Overview>("pg_overview_range", args),
     sbRpcRows<FunnelRow>("pg_funnel_screens_range", args),
     sbRpcRows<VariantRow>("pg_funnel_by_variant_range", args),
     sbRpcRows<SalesRow>("pg_sales_daily_range", args),
     sbRpcRows<StatusRow>("pg_purchases_by_status_range", args),
+    fetchDailySpend(range.sinceDay, range.untilDay),
   ]);
+
+  // Série por dia pro gráfico: faturamento (Hotmart) + investimento (Meta Ads),
+  // lucro = faturamento − investimento. Eixo X = todos os dias do período (o
+  // pg_sales_daily só traz dias com venda; aqui preenchemos os demais com 0).
+  const vendasPorDia = new Map(vendas.map((v) => [v.dia, v]));
+  const diasTodos = daysBetween(range.sinceDay, range.untilDay);
+  const dias = diasTodos.length > 92 ? diasTodos.slice(-92) : diasTodos; // teto de leitura
+  const pontos: DayPoint[] = dias.map((dia) => {
+    const v = vendasPorDia.get(dia);
+    const faturamento = Number(v?.receita ?? 0);
+    const investimento = Number(gasto[dia] ?? 0);
+    return {
+      dia,
+      vendas: Number(v?.vendas ?? 0),
+      faturamento,
+      investimento,
+      lucro: faturamento - investimento,
+    };
+  });
 
   const o: Overview = overviewRows[0] ?? {
     sessoes: 0,
@@ -215,6 +266,11 @@ export default async function DashboardPage({
               nota={o.reembolsos > 0 ? `− ${brl(Number(o.reembolso_valor) || 0)}` : undefined}
             />
           </div>
+        </Card>
+
+        {/* ── Gráfico: faturamento / investimento / lucro / vendas por dia ── */}
+        <Card titulo="Faturamento, investimento e lucro por dia">
+          <SalesChart data={pontos} adsReady={metaAdsReady} />
         </Card>
 
         {/* ── Funil tela a tela ── */}
