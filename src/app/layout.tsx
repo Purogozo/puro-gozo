@@ -41,11 +41,13 @@ export const metadata: Metadata = {
     locale: "pt_BR",
     // siteName omitido de propósito: era a última ocorrência do nome da marca
     // em texto que o rastreador lê. Sobra só o domínio, em og:url.
-    url: "https://www.purogozo.com",
+    // Domínio neutro (07/2026): purogozo.com foi marcado "Conteúdo inadequado"
+    // pela Meta; o funil migrou pra reconectasexualidade.com.br pra sair do bloqueio.
+    url: "https://www.reconectasexualidade.com.br",
   },
   verification: {
     other: {
-      "facebook-domain-verification": "uw5wpsaoliktox8vbwblc593hckm0t",
+      "facebook-domain-verification": "ta0vpv45b3sj8jhnuyhb6gouzfvneh",
     },
   },
 };

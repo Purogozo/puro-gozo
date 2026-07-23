@@ -31,7 +31,7 @@ import { OFFER_CURRENCY } from "@/lib/config";
 import { sbSelect, sbUpsert, supabaseReady } from "@/lib/supabase";
 
 // event_source_url exigido pela Meta quando action_source = "website".
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.purogozo.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.reconectasexualidade.com.br";
 
 /** Comparação em tempo constante — `===` vaza o tamanho do prefixo correto. */
 function safeEqual(a: string | undefined, b: string): boolean {
