@@ -2,9 +2,11 @@
 // Server Component: a chave secreta do Supabase só existe no servidor e nada
 // dela chega ao navegador. Renderiza HTML já pronto.
 
+import { Suspense } from "react";
 import { isAuthenticated } from "@/lib/dashboard-auth";
-import { sbSelect, supabaseReady } from "@/lib/supabase";
+import { sbRpcRows, supabaseReady } from "@/lib/supabase";
 import LoginForm from "./LoginForm";
+import DateFilter from "./DateFilter";
 import { logout } from "./actions";
 
 export const dynamic = "force-dynamic";
@@ -19,6 +21,9 @@ type Overview = {
   clicaram_checkout: number;
   vendas: number;
   receita: number;
+  abandono_checkout: number;
+  reembolsos: number;
+  reembolso_valor: number;
 };
 type FunnelRow = {
   screen: number;
@@ -34,6 +39,7 @@ type VariantRow = {
   foram_checkout: number;
 };
 type SalesRow = { dia: string; vendas: number; receita: number | null };
+type StatusRow = { event_type: string; quantidade: number; valor: number | null };
 
 const num = (n: number) => new Intl.NumberFormat("pt-BR").format(n);
 const brl = (n: number) =>
@@ -41,7 +47,58 @@ const brl = (n: number) =>
 const pct = (parte: number, todo: number) =>
   todo > 0 ? `${((parte / todo) * 100).toFixed(1)}%` : "—";
 
-export default async function DashboardPage() {
+// ── Intervalo de datas ──────────────────────────────────────
+// Referência America/Sao_Paulo, offset fixo -03:00 (o Brasil não usa horário de
+// verão desde 2019). Os limites saem em UTC (ISO) pro Postgres; intervalo
+// semiaberto [from, to). Rótulos em nomes amigáveis para o cabeçalho.
+const BR = "-03:00";
+const brDateStr = (d: Date) =>
+  new Intl.DateTimeFormat("en-CA", { timeZone: "America/Sao_Paulo" }).format(d); // YYYY-MM-DD
+const brMidnight = (dateStr: string) => new Date(`${dateStr}T00:00:00${BR}`);
+const addDays = (d: Date, n: number) => new Date(d.getTime() + n * 86_400_000);
+
+function resolveRange(sp: Record<string, string | undefined>) {
+  const now = new Date();
+  const hoje = brDateStr(now);
+  const key = sp.range ?? "7d";
+
+  if (key === "hoje") {
+    return { key, label: "Hoje", from: brMidnight(hoje).toISOString(), to: now.toISOString() };
+  }
+  if (key === "mes") {
+    const primeiro = `${hoje.slice(0, 7)}-01`;
+    return {
+      key,
+      label: "Mês atual",
+      from: brMidnight(primeiro).toISOString(),
+      to: now.toISOString(),
+    };
+  }
+  if (key === "custom" && sp.from && sp.to) {
+    return {
+      key,
+      label: `${sp.from.split("-").reverse().join("/")} → ${sp.to
+        .split("-")
+        .reverse()
+        .join("/")}`,
+      from: brMidnight(sp.from).toISOString(),
+      to: addDays(brMidnight(sp.to), 1).toISOString(), // fim do dia inclusivo
+    };
+  }
+  // padrão: últimos 7 dias (hoje + 6 anteriores)
+  return {
+    key: "7d",
+    label: "Últimos 7 dias",
+    from: addDays(brMidnight(hoje), -6).toISOString(),
+    to: now.toISOString(),
+  };
+}
+
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | undefined>>;
+}) {
   if (!(await isAuthenticated())) {
     return (
       <main className="flex min-h-dvh items-center justify-center bg-indigo p-6">
@@ -61,12 +118,17 @@ export default async function DashboardPage() {
     );
   }
 
+  const sp = await searchParams;
+  const range = resolveRange(sp);
+  const args = { p_from: range.from, p_to: range.to };
+
   // Consultas em paralelo — nenhuma depende da outra.
-  const [overviewRows, funil, variantes, vendas] = await Promise.all([
-    sbSelect<Overview>("pg_overview"),
-    sbSelect<FunnelRow>("pg_funnel_screens"),
-    sbSelect<VariantRow>("pg_funnel_by_variant"),
-    sbSelect<SalesRow>("pg_sales_daily", "select=*&limit=14"),
+  const [overviewRows, funil, variantes, vendas, status] = await Promise.all([
+    sbRpcRows<Overview>("pg_overview_range", args),
+    sbRpcRows<FunnelRow>("pg_funnel_screens_range", args),
+    sbRpcRows<VariantRow>("pg_funnel_by_variant_range", args),
+    sbRpcRows<SalesRow>("pg_sales_daily_range", args),
+    sbRpcRows<StatusRow>("pg_purchases_by_status_range", args),
   ]);
 
   const o: Overview = overviewRows[0] ?? {
@@ -75,18 +137,23 @@ export default async function DashboardPage() {
     clicaram_checkout: 0,
     vendas: 0,
     receita: 0,
+    abandono_checkout: 0,
+    reembolsos: 0,
+    reembolso_valor: 0,
   };
 
   const topo = funil[0]?.sessoes ?? 0;
-  const semDados = o.sessoes === 0 && funil.length === 0;
+  const ticket = o.vendas > 0 ? Number(o.receita) / o.vendas : 0;
+  const semDados = o.sessoes === 0 && funil.length === 0 && o.vendas === 0;
 
   return (
     <main className="min-h-dvh bg-indigo px-4 py-8 sm:px-8">
       <div className="mx-auto max-w-5xl">
-        <header className="mb-8 flex items-end justify-between gap-4">
+        <header className="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="eyebrow text-nevoa">Puro Gozo</p>
             <h1 className="font-serif text-3xl text-marfim">Dashboard do funil</h1>
+            <p className="mt-1 text-sm text-nevoa">Período: {range.label}</p>
           </div>
           <form action={logout}>
             <button className="text-sm text-nevoa underline hover:text-marfim">
@@ -95,10 +162,17 @@ export default async function DashboardPage() {
           </form>
         </header>
 
+        {/* ── Filtro de data ── */}
+        <div className="mb-6">
+          <Suspense fallback={null}>
+            <DateFilter />
+          </Suspense>
+        </div>
+
         {semDados && (
           <p className="mb-6 rounded-xl bg-marfim/10 p-4 text-sm text-nevoa">
-            Nenhum evento registrado ainda. Os dados aparecem assim que o funil
-            receber tráfego real (visitas com <code>?screen=</code> são marcadas
+            Nenhum evento no período selecionado. Tente um intervalo maior, ou
+            aguarde tráfego real (visitas com <code>?screen=</code> são marcadas
             como preview e ficam de fora).
           </p>
         )}
@@ -123,6 +197,25 @@ export default async function DashboardPage() {
           />
           <Kpi rotulo="Receita" valor={brl(Number(o.receita) || 0)} destaque />
         </section>
+
+        {/* ── Conversão & abandono ── */}
+        <Card titulo="Conversão & abandono">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+            <Mini rotulo="Sessão → Venda" valor={pct(o.vendas, o.sessoes)} />
+            <Mini rotulo="Checkout → Venda" valor={pct(o.vendas, o.clicaram_checkout)} />
+            <Mini
+              rotulo="Abandono de checkout"
+              valor={num(o.abandono_checkout)}
+              nota={pct(o.abandono_checkout, o.clicaram_checkout) + " do checkout"}
+            />
+            <Mini rotulo="Ticket médio" valor={o.vendas > 0 ? brl(ticket) : "—"} />
+            <Mini
+              rotulo="Reembolsos"
+              valor={num(o.reembolsos)}
+              nota={o.reembolsos > 0 ? `− ${brl(Number(o.reembolso_valor) || 0)}` : undefined}
+            />
+          </div>
+        </Card>
 
         {/* ── Funil tela a tela ── */}
         <Card titulo="Funil tela a tela">
@@ -183,15 +276,31 @@ export default async function DashboardPage() {
           )}
         </Card>
 
-        {/* ── Vendas ── */}
-        <Card titulo="Vendas por dia (14 dias)">
+        {/* ── Vendas por status (Hotmart) ── */}
+        <Card titulo="Vendas por status (Hotmart)">
+          {status.length === 0 ? (
+            <Vazio />
+          ) : (
+            <Tabela
+              cabecalho={["Status", "Qtd.", "Valor"]}
+              linhas={status.map((s) => [
+                statusLabel(s.event_type),
+                num(s.quantidade),
+                brl(Number(s.valor) || 0),
+              ])}
+            />
+          )}
+        </Card>
+
+        {/* ── Vendas por dia ── */}
+        <Card titulo="Vendas por dia">
           {vendas.length === 0 ? (
             <Vazio />
           ) : (
             <Tabela
               cabecalho={["Dia", "Vendas", "Receita"]}
               linhas={vendas.map((v) => [
-                new Date(v.dia).toLocaleDateString("pt-BR"),
+                new Date(v.dia).toLocaleDateString("pt-BR", { timeZone: "UTC" }),
                 num(v.vendas),
                 brl(Number(v.receita) || 0),
               ])}
@@ -200,11 +309,29 @@ export default async function DashboardPage() {
         </Card>
 
         <p className="mt-8 text-center text-xs text-nevoa/60">
-          Reembolsos e chargebacks abatem a receita automaticamente.
+          Reembolsos e chargebacks abatem a receita automaticamente. Datas no fuso
+          de Brasília.
         </p>
       </div>
     </main>
   );
+}
+
+// Nomes legíveis pros event_type crus da Hotmart.
+function statusLabel(t: string): string {
+  const mapa: Record<string, string> = {
+    PURCHASE_APPROVED: "Aprovada",
+    PURCHASE_COMPLETE: "Concluída (fim garantia)",
+    PURCHASE_REFUNDED: "Reembolsada",
+    PURCHASE_CHARGEBACK: "Chargeback",
+    PURCHASE_PROTEST: "Contestação",
+    PURCHASE_CANCELED: "Cancelada",
+    PURCHASE_EXPIRED: "Expirada",
+    PURCHASE_DELAYED: "Atrasada",
+    PURCHASE_BILLET_PRINTED: "Boleto impresso",
+    PURCHASE_OUT_OF_SHOPPING_CART: "Saiu do carrinho",
+  };
+  return mapa[t] ?? t;
 }
 
 function Kpi({
@@ -235,6 +362,17 @@ function Kpi({
   );
 }
 
+// Bloco compacto pras métricas derivadas (dentro de um Card).
+function Mini({ rotulo, valor, nota }: { rotulo: string; valor: string; nota?: string }) {
+  return (
+    <div className="rounded-lg bg-indigo/40 p-3">
+      <p className="eyebrow text-nevoa">{rotulo}</p>
+      <p className="mt-1 font-serif text-xl text-marfim">{valor}</p>
+      {nota && <p className="text-xs text-nevoa">{nota}</p>}
+    </div>
+  );
+}
+
 function Card({ titulo, children }: { titulo: string; children: React.ReactNode }) {
   return (
     <section className="mt-6 rounded-2xl bg-tinta/40 p-5">
@@ -245,7 +383,7 @@ function Card({ titulo, children }: { titulo: string; children: React.ReactNode 
 }
 
 function Vazio() {
-  return <p className="text-sm text-nevoa/60">Sem dados ainda.</p>;
+  return <p className="text-sm text-nevoa/60">Sem dados no período.</p>;
 }
 
 function Tabela({

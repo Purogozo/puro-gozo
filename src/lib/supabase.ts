@@ -106,6 +106,31 @@ export async function sbRpc(
   return true;
 }
 
+/**
+ * Chama uma função SQL que RETORNA linhas (ex.: pg_overview_range) e devolve o
+ * resultado. Diferente de sbRpc, que é fire-and-forget (return=minimal). Devolve
+ * [] em qualquer falha — o dashboard degrada, não quebra.
+ */
+export async function sbRpcRows<T = Record<string, unknown>>(
+  fn: string,
+  args: Record<string, unknown>
+): Promise<T[]> {
+  const res = await request(`rpc/${fn}`, {
+    method: "POST",
+    headers: headers(),
+    body: JSON.stringify(args),
+  });
+  if (!res || !res.ok) {
+    if (res) console.error(`[supabase] rpc ${fn} falhou:`, res.status, await res.text());
+    return [];
+  }
+  try {
+    return (await res.json()) as T[];
+  } catch {
+    return [];
+  }
+}
+
 /** Lê de uma tabela/view. Devolve [] em qualquer falha (dashboard degrada, não quebra). */
 export async function sbSelect<T = Record<string, unknown>>(
   table: string,
