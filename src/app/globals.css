@@ -179,6 +179,24 @@ body {
   animation: bob 2s ease-in-out infinite;
 }
 
+/* Entrada da T1 (landing) — CSS puro, sem Framer.
+   Um único fade-up no bloco de conteúdo: a headline fica legível em ~0.5s.
+   `both` faz o estado inicial ser opacity:0; como o CSS é render-blocking,
+   a animação sempre roda ao pintar (se o CSS falhasse, nada estilizaria). */
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.landing-reveal {
+  animation: reveal-up 0.55s var(--ease-diary) both;
+}
+
 /* Scrollbar discreta */
 ::-webkit-scrollbar {
   width: 8px;
@@ -196,7 +214,8 @@ body {
   .candle-glow,
   .cta-pulse,
   .bob,
-  .wave-anim {
+  .wave-anim,
+  .landing-reveal {
     animation: none !important;
   }
   .grain::after {

@@ -114,6 +114,7 @@ function newEventId(): string {
 
 const EID_KEY = "pg-eid";
 const FBC_KEY = "pg-fbc";
+const FBP_KEY = "pg-fbp";
 const SID_KEY = "pg-sid";
 
 // ID anônimo estável por visitante (localStorage). Melhora a correspondência
@@ -186,6 +187,38 @@ function getFbc(): string | undefined {
   }
 }
 
+// fbp (ID do navegador, _fbp): o Pixel cria esse cookie, mas em navegador in-app
+// (Instagram/Facebook) ele frequentemente NÃO existe — medido em ~68% das
+// sessões sem fbp. Sem ele, o Purchase do webhook (reidratado de pg_sessions)
+// e os eventos da CAPI saem sem um dos sinais de maior peso na correspondência.
+//
+// Estratégia (a mesma que a Meta recomenda e que já usamos pro fbc): se o cookie
+// existir, usa ele (mantém a paridade com o Pixel); senão gera no formato oficial
+// fb.1.<ts>.<rand>, persiste em localStorage (estável por navegador, como o
+// cookie de 90 dias da Meta e como o pg-eid) e, best-effort, grava o cookie _fbp
+// pra que o Pixel adote o MESMO valor. Assim CAPI, Supabase e Pixel convergem.
+function getFbp(): string | undefined {
+  const cookie = readCookie("_fbp");
+  if (cookie) return cookie;
+  try {
+    const stored = localStorage.getItem(FBP_KEY);
+    if (stored) return stored;
+    const rand = Math.floor(1e10 + Math.random() * 9e10); // ~11 dígitos
+    const fbp = `fb.1.${Date.now()}.${rand}`;
+    localStorage.setItem(FBP_KEY, fbp);
+    try {
+      // host-only, 90 dias (mesma validade do _fbp da Meta). Se o Pixel rodar,
+      // ele reusa um _fbp existente em vez de criar outro → valores batem.
+      document.cookie = `_fbp=${fbp}; max-age=${90 * 24 * 60 * 60}; path=/; samesite=Lax`;
+    } catch {
+      /* cookie bloqueado: seguimos com o valor em localStorage */
+    }
+    return fbp;
+  } catch {
+    return undefined;
+  }
+}
+
 // Envia o evento pra CAPI (servidor) com o mesmo event_id do Pixel + os sinais
 // de correspondência que o servidor sozinho não tem (external_id, fbp, fbc).
 // keepalive: sobrevive ao redirect do checkout (InitiateCheckout).
@@ -197,7 +230,7 @@ function sendToCapi(
   try {
     const userData = {
       external_id: getExternalId(),
-      fbp: readCookie("_fbp"),
+      fbp: getFbp(),
       fbc: getFbc(),
     };
     fetch(CAPI_ENDPOINT, {
@@ -291,7 +324,7 @@ export function trackEvent(name: EventName, payload: Record<string, unknown> = {
     visitor_id: getExternalId(),
     preview: isPreview(),
     utm: getParams(),
-    fbp: readCookie("_fbp"),
+    fbp: getFbp(),
     fbc: getFbc(),
     landing_url: window.location.href,
     ...payload,

@@ -1,26 +1,28 @@
 "use client";
 
-import { motion } from "motion/react";
 import type { ScreenContent } from "@/lib/types";
 import { useQuiz } from "@/lib/store";
-import { useReducedMotion, DIARY } from "@/lib/motion";
 import { Logo } from "@/components/brand/Logo";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 
+// T1 · landing SEM Framer Motion.
+// É a única tela do caminho crítico: precisa vir VISÍVEL já no HTML servido
+// (SSR), sem esperar ~800KB de JS hidratar num navegador in-app lento. A
+// entrada é uma animação CSS única (.landing-reveal), que roda ao pintar.
+//
+// `animateIn`: o shell (QuizFlow) pinta com animateIn (fade de entrada). Quando
+// o QuizRunner assume e re-renderiza a mesma T1, passa animateIn={false} pra não
+// repetir o fade — a tela já está na posição final, troca imperceptível.
 export function LandingScreen({
   content,
   headline,
+  animateIn = true,
 }: {
   content: ScreenContent;
   headline?: string;
+  animateIn?: boolean;
 }) {
-  const reduced = useReducedMotion();
   const next = useQuiz((s) => s.next);
-  const words = (headline ?? content.headline).split(" ");
-  // fator de tempo: 0 sob reduced-motion (revelação imediata)
-  const T = reduced ? 0 : 1;
-  const wordStep = reduced ? 0 : 0.07;
-  const afterWords = 0.5 * T + words.length * wordStep;
 
   return (
     <div className="bg-breathe grain relative min-h-dvh w-full overflow-hidden">
@@ -33,62 +35,30 @@ export function LandingScreen({
         }}
       />
 
-      <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-xl flex-col items-center justify-center px-6 py-16 text-center">
-        <motion.div
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, ease: DIARY }}
-        >
-          <Logo tone="marfim" className="text-3xl" />
-        </motion.div>
+      <div
+        className={`relative z-10 mx-auto flex min-h-dvh w-full max-w-xl flex-col items-center justify-center px-6 py-16 text-center ${
+          animateIn ? "landing-reveal" : ""
+        }`}
+      >
+        <Logo tone="marfim" className="text-3xl" />
 
-        <motion.p
-          className="eyebrow mt-8 text-rose"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3, duration: 0.6 }}
-        >
-          {content.eyebrow}
-        </motion.p>
+        <p className="eyebrow mt-8 text-rose">{content.eyebrow}</p>
 
-        {/* Headline revela palavra a palavra */}
         <h1
           className="mt-5 font-serif text-[1.85rem] leading-[1.16] tracking-[-0.01em] text-marfim sm:text-[2.4rem]"
           style={{ fontWeight: 700 }}
         >
-          {words.map((w, i) => (
-            <motion.span
-              key={i}
-              className="inline-block"
-              initial={reduced ? { opacity: 0 } : { opacity: 0, y: 18, filter: "blur(6px)" }}
-              animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-              transition={{
-                delay: 0.5 * T + i * wordStep,
-                duration: reduced ? 0.15 : 0.5,
-                ease: DIARY,
-              }}
-            >
-              {w}&nbsp;
-            </motion.span>
-          ))}
+          {headline ?? content.headline}
         </h1>
 
-        <motion.p
+        <p
           className="mt-6 max-w-md font-sans text-[0.98rem] leading-relaxed text-nevoa"
           style={{ fontWeight: 300 }}
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: afterWords + 0.1 * T, duration: reduced ? 0.15 : 0.6, ease: DIARY }}
         >
           {content.subhead}
-        </motion.p>
+        </p>
 
-        <motion.div
-          className="mt-10 flex flex-col items-center gap-4"
-          initial={{ opacity: 0, y: 16 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: afterWords + 0.35 * T, duration: reduced ? 0.15 : 0.6, ease: DIARY }}
-        >
+        <div className="mt-10 flex flex-col items-center gap-4">
           <PrimaryButton pulse onClick={() => next()}>
             {content.cta} →
           </PrimaryButton>
@@ -106,16 +76,14 @@ export function LandingScreen({
               Suas informações são privadas e protegidas
             </span>
           </div>
-        </motion.div>
+        </div>
 
-        {/* cue de "começar" descendo */}
-        {!reduced && (
-          <div className="bob absolute bottom-6 text-nevoa/60">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-              <path d="M6 9l6 6 6-6" />
-            </svg>
-          </div>
-        )}
+        {/* cue de "começar" descendo (CSS; desliga sob reduced-motion) */}
+        <div className="bob absolute bottom-6 text-nevoa/60">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <path d="M6 9l6 6 6-6" />
+          </svg>
+        </div>
       </div>
     </div>
   );

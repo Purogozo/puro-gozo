@@ -3,6 +3,10 @@
 import { useReducedMotion as useReducedMotionRaw } from "motion/react";
 import type { Variants, Transition } from "motion/react";
 
+// Re-export: componentes fora do caminho crítico ainda podem importar `haptic`
+// daqui. Os do caminho da T1 devem importar de "@/lib/haptic" (sem Framer).
+export { haptic } from "./haptic";
+
 // Easing assinatura "virar a página de um diário"
 export const DIARY: Transition["ease"] = [0.22, 1, 0.36, 1];
 
@@ -62,15 +66,4 @@ export function staggerItem(reduced: boolean): Variants {
 // Sempre boolean (o hook bruto pode retornar null antes da hidratação)
 export function useReducedMotion(): boolean {
   return !!useReducedMotionRaw();
-}
-
-// Háptico discreto no mobile
-export function haptic(pattern: number | number[] = 14) {
-  if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-    try {
-      navigator.vibrate(pattern);
-    } catch {
-      /* no-op */
-    }
-  }
 }
