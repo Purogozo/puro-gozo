@@ -15,7 +15,6 @@ import {
 } from "@/lib/tracking";
 import { uuidToShortId } from "@/lib/shortid";
 import { ReservoirMeter } from "./ReservoirMeter";
-import { AudioToggle } from "./AudioToggle";
 import { LandingScreen } from "./screens/LandingScreen";
 import { SelectScreen } from "./screens/SelectScreen";
 import { LetterScreen } from "./screens/LetterScreen";
@@ -133,7 +132,6 @@ export function QuizRunner({ variant = "a" }: { variant?: Variant }) {
 
   const content = resolveContent(screen, path);
   const ownBg = OWN_BG.has(screen.type);
-  const dark = screen.intimate || screen.type === "result";
 
   const bgClass = ownBg
     ? "bg-transparent"
@@ -191,7 +189,6 @@ export function QuizRunner({ variant = "a" }: { variant?: Variant }) {
       )}
 
       {!NO_METER.has(screen.type) && <ReservoirMeter level={meter} />}
-      <AudioToggle dark={dark} />
 
       {/* initial={false}: quando o QuizRunner monta, a tela atual (normalmente a
           T1, já pintada pelo shell) NÃO refaz a animação de entrada. Transições

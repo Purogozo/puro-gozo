@@ -14,7 +14,6 @@ type Answers = Record<number, string | string[]>;
 interface QuizState {
   index: number; // posição na lista SCREENS (0-based)
   answers: Answers;
-  audioOn: boolean;
   hydrated: boolean;
 
   // derivados
@@ -28,7 +27,6 @@ interface QuizState {
   next: () => void;
   prev: () => void;
   goToScreenId: (id: number) => void;
-  toggleAudio: () => void;
   reset: () => void;
   setHydrated: () => void;
 }
@@ -38,7 +36,6 @@ export const useQuiz = create<QuizState>()(
     (set, get) => ({
       index: 0,
       answers: {},
-      audioOn: false,
       hydrated: false,
 
       path: () => pathFromStatus(get().answers[3] as string | undefined),
@@ -58,8 +55,6 @@ export const useQuiz = create<QuizState>()(
         const idx = SCREENS.findIndex((sc) => sc.id === id);
         if (idx >= 0) set({ index: idx });
       },
-
-      toggleAudio: () => set((s) => ({ audioOn: !s.audioOn })),
 
       reset: () => set({ index: 0, answers: {} }),
 
@@ -87,7 +82,6 @@ export const useQuiz = create<QuizState>()(
       partialize: (s) => ({
         index: s.index,
         answers: s.answers,
-        audioOn: s.audioOn,
       }),
       onRehydrateStorage: () => (state) => {
         state?.setHydrated();

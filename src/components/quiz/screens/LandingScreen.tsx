@@ -117,35 +117,35 @@ export function LandingScreen({
       />
 
       <div
-        className={`relative z-10 mx-auto flex min-h-dvh w-full max-w-xl flex-col items-center justify-center px-6 py-10 text-center ${
+        className={`relative z-10 mx-auto flex min-h-dvh w-full max-w-xl flex-col items-center justify-center px-6 py-6 text-center ${
           animateIn ? "landing-reveal" : ""
         }`}
       >
-        <Logo tone="marfim" className="text-2xl" />
+        <Logo tone="marfim" className="text-xl" />
 
         {/* rosto da sexóloga = ponte com os primeiros 10s do anúncio.
             Vale ser generoso no tamanho: é reconhecimento facial, não enfeite. */}
-        <AndreiaPhoto className="mt-5 h-[100px] w-[100px] shrink-0 sm:h-28 sm:w-28" />
+        <AndreiaPhoto className="mt-4 h-[150px] w-[150px] shrink-0 sm:h-[168px] sm:w-[168px]" />
 
-        <p className="eyebrow mt-4 text-rose">{content.eyebrow}</p>
+        <p className="eyebrow mt-3 text-rose">{content.eyebrow}</p>
 
         {/* headline: o ÚNICO elemento que muda entre as variantes A/B/C */}
         <h1
-          className="mt-3 font-serif text-[1.6rem] leading-[1.18] tracking-[-0.01em] text-marfim sm:text-[2.05rem]"
+          className="mt-2.5 font-serif text-[1.6rem] leading-[1.18] tracking-[-0.01em] text-marfim sm:text-[2.05rem]"
           style={{ fontWeight: 700 }}
         >
           {headline}
         </h1>
 
         <p
-          className="mt-4 max-w-md font-sans text-[0.94rem] leading-relaxed text-nevoa"
+          className="mt-3.5 max-w-md font-sans text-[0.94rem] leading-relaxed text-nevoa"
           style={{ fontWeight: 300 }}
         >
           {content.subhead}
         </p>
 
         {/* primeira pergunta = o CTA. Sem botão que não pergunta nada. */}
-        <div className="mt-7 w-full max-w-md">
+        <div className="mt-5 w-full max-w-md">
           {content.prompt && (
             <p
               id="t1-prompt"
@@ -158,7 +158,7 @@ export function LandingScreen({
           <div
             role="group"
             aria-labelledby={content.prompt ? "t1-prompt" : undefined}
-            className="mt-4 grid grid-cols-2 gap-2.5"
+            className="mt-3.5 grid grid-cols-2 gap-2"
           >
             {options.map((opt) => {
               const isSelected = selected === opt.id;
