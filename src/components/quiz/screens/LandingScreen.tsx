@@ -123,8 +123,9 @@ export function LandingScreen({
       >
         <Logo tone="marfim" className="text-2xl" />
 
-        {/* rosto da sexóloga = ponte com os primeiros 10s do anúncio */}
-        <AndreiaPhoto className="mt-5 h-[84px] w-[84px] shrink-0 sm:h-24 sm:w-24" />
+        {/* rosto da sexóloga = ponte com os primeiros 10s do anúncio.
+            Vale ser generoso no tamanho: é reconhecimento facial, não enfeite. */}
+        <AndreiaPhoto className="mt-5 h-[100px] w-[100px] shrink-0 sm:h-28 sm:w-28" />
 
         <p className="eyebrow mt-4 text-rose">{content.eyebrow}</p>
 
