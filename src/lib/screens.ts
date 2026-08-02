@@ -29,51 +29,45 @@ export const PROFILES: Record<Profile, ProfileInfo> = {
 };
 
 export const SCREENS: Screen[] = [
-  // ───────────────────────── T1 · LANDING ─────────────────────────
+  // ───────────────────────── T1 · LANDING + IDADE ─────────────────────────
+  // A antiga T2 (idade) foi ABSORVIDA por esta tela: a primeira pergunta é o
+  // próprio CTA, sem botão morto no meio. Quem responde a idade já está dentro
+  // da avaliação — a T1 deixou de ter um passo que não pergunta nada.
+  //
+  // A headline vem do teste A/B (ab.ts) — o valor abaixo é o fallback de SSR e
+  // DEVE ficar igual à variante "a". Mantenha os dois arquivos sincronizados.
+  // A resposta da idade é gravada em answers[1] (id desta tela).
   {
     id: 1,
     type: "landing",
     meter: 0,
     intimate: true,
     universal: {
-      eyebrow: "Avaliação · por uma sexóloga",
+      eyebrow: "com Andreia Fiamoncini, sexóloga",
       headline:
-        "Descubra o que apagou o seu desejo sexual e receba o método de uma sexóloga pra você voltar a sentir tesão de verdade.",
+        "Eu vou te mostrar como voltar a sentir tesão de verdade, mesmo que faça anos que ele sumiu.",
       subhead:
-        "Uma avaliação de 2 minutos, criada por uma sexóloga, que identifica por que você perdeu a vontade de transar e te mostra o caminho pra voltar a sentir prazer de verdade, sozinha ou na cama com alguém.",
-      cta: "COMEÇAR MINHA AVALIAÇÃO",
-    },
-  },
-
-  // ───────────────────────── T2 · IDADE ─────────────────────────
-  {
-    id: 2,
-    type: "single",
-    meter: 0.05,
-    universal: {
-      eyebrow: "Sobre você",
-      headline: "Qual a sua idade?",
-      subhead:
-        "Em cada fase da vida o desejo sexual some por um motivo diferente. Sua resposta diz onde o seu travou.",
+        "Responde as próximas perguntas e eu monto o seu caminho de volta ao prazer. Menos de 2 minutos, só entre nós, suas respostas são privadas.",
+      prompt: "Vamos começar. Me conta primeiro: qual a sua idade?",
       options: [
         {
           id: "29-",
-          label: "Menos de 29 anos",
+          label: "Menos de 29",
           echo: "Antes dos 29, o desejo raramente vem pronto, ele é aprendido. Dá pra começar certo.",
         },
         {
           id: "29-39",
-          label: "Entre 29 e 39 anos",
+          label: "29 a 39",
           echo: "Entre 29 e 39, o desejo costuma travar no acúmulo: rotina, cobrança, cabeça cheia.",
         },
         {
           id: "40-49",
-          label: "Entre 40 e 49 anos",
+          label: "40 a 49",
           echo: "Dos 40 aos 49 o desejo não morre, ele é silenciado. Faz sentido você estar aqui.",
         },
         {
           id: "50+",
-          label: "50 anos ou mais",
+          label: "50 ou mais",
           echo: "Aos 50+, ninguém te disse, mas o tesão não tem prazo de validade. Tem é camada por cima.",
         },
       ],

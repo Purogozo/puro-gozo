@@ -5,6 +5,7 @@ import type { ScreenContent } from "@/lib/types";
 import { useQuiz } from "@/lib/store";
 import { useReducedMotion, DIARY } from "@/lib/motion";
 import { Logo } from "@/components/brand/Logo";
+import { AndreiaPhoto } from "@/components/brand/AndreiaPhoto";
 import { PrimaryButton } from "@/components/ui/PrimaryButton";
 
 // T4, carta/confissão da Andreia (tom quente, luz baixa)
@@ -21,15 +22,15 @@ export function LetterScreen({ content }: { content: ScreenContent }) {
       <div className="relative z-10 mx-auto flex min-h-dvh w-full max-w-lg flex-col px-6 pb-12 pt-16">
         <Logo tone="marfim" className="mx-auto text-xl" />
 
-        {/* foto da Andreia, placeholder com ken-burns (trocar por /public/andreia.jpg) */}
+        {/* foto da Andreia com ken-burns — mesmo arquivo da T1 (public/andreia.jpg);
+            sem o arquivo, o AndreiaPhoto cai no monograma "AF" */}
         <motion.div
-          className="mx-auto mt-8 h-28 w-28 overflow-hidden rounded-full border border-rose/40"
+          className="mx-auto mt-8 h-28 w-28"
           initial={{ opacity: 0, scale: 1.08 }}
           animate={{ opacity: 1, scale: reduced ? 1 : [1.08, 1, 1.05] }}
           transition={{ duration: reduced ? 0.4 : 9, ease: "easeInOut", repeat: reduced ? 0 : Infinity, repeatType: "reverse" }}
-          style={{ background: "radial-gradient(circle at 50% 35%, #c97d90, #6e3350)" }}
         >
-          <div className="flex h-full w-full items-center justify-center font-serif text-3xl italic text-marfim/90">AF</div>
+          <AndreiaPhoto className="h-full w-full" monogramClassName="text-3xl" />
         </motion.div>
 
         <motion.p className="eyebrow mt-6 text-center text-rose" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }}>

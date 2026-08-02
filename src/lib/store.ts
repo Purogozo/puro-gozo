@@ -66,7 +66,11 @@ export const useQuiz = create<QuizState>()(
       setHydrated: () => set({ hydrated: true }),
     }),
     {
-      name: "pg-quiz-v1",
+      // v2: a T2 (idade) foi absorvida pela T1, então TODA posição depois dela
+      // andou uma casa. `index` é posicional — reaproveitar o estado v1 de uma
+      // sessão em voo no momento do deploy jogaria a pessoa numa tela trocada.
+      // Nome novo = quem está no meio recomeça na T1, que é o mal menor.
+      name: "pg-quiz-v2",
       // sessionStorage, NÃO localStorage: quem entra de novo recomeça do zero.
       // Antes o estado sobrevivia a fechar o navegador e a pessoa voltava
       // caída na mesma tela, sem como reiniciar.

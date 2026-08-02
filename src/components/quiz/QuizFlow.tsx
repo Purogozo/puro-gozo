@@ -2,7 +2,8 @@
 
 import { useEffect, useState, Suspense, lazy } from "react";
 import { SCREENS, resolveContent } from "@/lib/screens";
-import { AB, type Variant } from "@/lib/ab";
+import { type Variant } from "@/lib/ab";
+import { captureParams } from "@/lib/tracking";
 import { LandingScreen } from "./screens/LandingScreen";
 
 // O fluxo interativo (Framer Motion + as 8 telas) é carregado SOB DEMANDA, só
@@ -30,7 +31,14 @@ const QuizRunner = lazy(() =>
 // e cliente-primeira-pintura produzem o MESMO HTML (a T1), sem mismatch.
 export function QuizFlow({ variant = "a" }: { variant?: Variant }) {
   const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    setMounted(true);
+    // UTMs capturadas já na hidratação do shell, não só quando o QuizRunner
+    // carrega: a T1 agora tem opções clicáveis, e um toque rápido podia gravar
+    // a sessão sem origem se o chunk do runner ainda estivesse baixando.
+    // captureParams é idempotente (não sobrescreve o que já capturou).
+    captureParams();
+  }, []);
 
   // A T1 é estática (headline vem do cookie A/B no servidor; conteúdo é fixo).
   // Renderizada já em estado final (animateIn={false}) pra não "pular" quando o
@@ -38,7 +46,7 @@ export function QuizFlow({ variant = "a" }: { variant?: Variant }) {
   const landing = (
     <LandingScreen
       content={resolveContent(SCREENS[0], "B")}
-      headline={AB.landingHeadline[variant]}
+      variant={variant}
       animateIn={false}
     />
   );

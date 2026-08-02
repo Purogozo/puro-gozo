@@ -32,6 +32,7 @@ export interface ScreenContent {
   headline: string;
   subhead?: string;
   body?: string[]; // parágrafos
+  prompt?: string; // T1 — rótulo da primeira pergunta, logo acima das opções
   options?: Option[];
   cta?: string;
   microcopy?: string; // selo de privacidade / nota de rodapé

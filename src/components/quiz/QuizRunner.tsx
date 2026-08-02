@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import { useQuiz } from "@/lib/store";
 import { SCREENS, resolveContent } from "@/lib/screens";
-import { AB, type Variant } from "@/lib/ab";
+import { RESULT_CTA, type Variant } from "@/lib/ab";
 import { useReducedMotion, pageVariants } from "@/lib/motion";
 import {
   captureParams,
@@ -56,6 +56,9 @@ export function QuizRunner({ variant = "a" }: { variant?: Variant }) {
   useEffect(() => {
     try {
       localStorage.removeItem("pg-quiz-v1");
+      // v1 também ficou órfão no sessionStorage quando a T2 foi absorvida pela
+      // T1 e o store passou a se chamar pg-quiz-v2 (ver store.ts).
+      sessionStorage.removeItem("pg-quiz-v1");
     } catch {
       /* storage bloqueado: nada a limpar */
     }
@@ -121,8 +124,9 @@ export function QuizRunner({ variant = "a" }: { variant?: Variant }) {
     return (
       <LandingScreen
         content={resolveContent(landing, "B")}
-        headline={AB.landingHeadline[variant]}
+        variant={variant}
         animateIn={false}
+        restore
       />
     );
   }
@@ -147,8 +151,9 @@ export function QuizRunner({ variant = "a" }: { variant?: Variant }) {
         return (
           <LandingScreen
             content={content}
-            headline={AB.landingHeadline[variant]}
+            variant={variant}
             animateIn={false}
+            restore
           />
         );
       case "letter":
@@ -160,7 +165,7 @@ export function QuizRunner({ variant = "a" }: { variant?: Variant }) {
       case "loading":
         return <LoadingScreen content={content} />;
       case "result":
-        return <ResultScreen content={content} ctaLabel={AB.resultCta[variant]} />;
+        return <ResultScreen content={content} ctaLabel={RESULT_CTA} />;
       case "sales":
         return <SalesScreen content={content} onCheckout={goCheckout} />;
       case "single":
