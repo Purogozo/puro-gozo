@@ -3,6 +3,7 @@
 // dela chega ao navegador. Renderiza HTML já pronto.
 
 import { Suspense } from "react";
+import Link from "next/link";
 import { isAuthenticated } from "@/lib/dashboard-auth";
 import { sbRpcRows, sbSelect, supabaseReady } from "@/lib/supabase";
 import { fetchDailySpend, metaAdsReady } from "@/lib/meta-ads";
@@ -12,6 +13,14 @@ import {
   apelidoDaVariante,
   TESTE_HEADLINE_DESDE,
 } from "./quiz-meta";
+import AdsPanel from "./AdsPanel";
+import {
+  agregaAnuncios,
+  normalizaAgrupamento,
+  type Agrupamento,
+  type PurchaseSessionRow,
+  type SessionRow,
+} from "./ads";
 import LoginForm from "./LoginForm";
 import DateFilter from "./DateFilter";
 import SalesChart, { type DayPoint } from "./SalesChart";
@@ -48,7 +57,16 @@ type VariantRow = {
 };
 type SalesRow = { dia: string; vendas: number; receita: number | null };
 type StatusRow = { event_type: string; quantidade: number; valor: number | null };
-type PurchaseRow = { variant: string | null; value: number | null };
+type PurchaseRow = {
+  variant: string | null;
+  value: number | null;
+  session_id: string | null;
+};
+
+// Teto de linhas lidas na aba de anúncios. Hoje o volume é de centenas por
+// período; se bater no teto, a página avisa em vez de mostrar número truncado
+// como se fosse o total.
+const SESSOES_TETO = 5000;
 
 // Uma linha do teste A/B/C: a variante inteira, somando os dois caminhos.
 type TesteRow = {
@@ -168,10 +186,24 @@ export default async function DashboardPage({
   const sp = await searchParams;
   const range = resolveRange(sp);
   const args = { p_from: range.from, p_to: range.to };
+  const aba = sp.aba === "anuncios" ? "anuncios" : "geral";
+  const por = normalizaAgrupamento(sp.por);
+
+  // Links das abas e do agrupamento preservam o período que está na URL —
+  // trocar de aba não pode jogar a pessoa de volta pros 7 dias padrão.
+  const comParams = (extra: Record<string, string>) => {
+    const q = new URLSearchParams();
+    for (const k of ["range", "from", "to"] as const) {
+      if (sp[k]) q.set(k, sp[k] as string);
+    }
+    for (const [k, v] of Object.entries(extra)) q.set(k, v);
+    const s = q.toString();
+    return s ? `/dashboard?${s}` : "/dashboard";
+  };
 
   // Consultas em paralelo — nenhuma depende da outra. O gasto de anúncio vem da
   // Meta Ads API (best-effort: falha → mapa vazio, investimento 0).
-  const [overviewRows, funil, variantes, vendas, status, gasto, compras] =
+  const [overviewRows, funil, variantes, vendas, status, gasto, compras, sessoes] =
     await Promise.all([
       sbRpcRows<Overview>("pg_overview_range", args),
       sbRpcRows<FunnelRow>("pg_funnel_screens_range", args),
@@ -184,9 +216,19 @@ export default async function DashboardPage({
       // chave é a secreta, server-only. Mesma regra de "venda" do pg_overview.
       sbSelect<PurchaseRow>(
         "pg_purchases",
-        `select=variant,value&event_type=in.(PURCHASE_APPROVED,PURCHASE_COMPLETE)` +
+        `select=variant,value,session_id&event_type=in.(PURCHASE_APPROVED,PURCHASE_COMPLETE)` +
           `&created_at=gte.${range.from}&created_at=lt.${range.to}&limit=5000`
       ),
+      // Sessões cruas só quando a aba de anúncios está aberta: é a consulta
+      // mais pesada da página e a visão geral não usa nada disso.
+      aba === "anuncios"
+        ? sbSelect<SessionRow>(
+            "pg_sessions",
+            `select=session_id,max_screen,completed,checkout_click,landing_url,utm` +
+              `&started_at=gte.${range.from}&started_at=lt.${range.to}` +
+              `&order=started_at.desc&limit=${SESSOES_TETO}`
+          )
+        : Promise.resolve<SessionRow[]>([]),
     ]);
 
   // Série por dia pro gráfico: faturamento (Hotmart) + investimento (Meta Ads),
@@ -277,6 +319,13 @@ export default async function DashboardPage({
   // O período atravessa a virada do teste? Antes de 02/08 as letras a/b eram
   // outras headlines (e mudavam também o CTA da T19) — somar os dois lados dá
   // um número que não significa nada.
+  // Retenção por anúncio (aba "Anúncios").
+  const anuncios =
+    aba === "anuncios"
+      ? agregaAnuncios(sessoes, compras as PurchaseSessionRow[], por)
+      : null;
+  const sessoesTruncadas = sessoes.length >= SESSOES_TETO;
+
   const periodoMistura = range.sinceDay < TESTE_HEADLINE_DESDE;
   const telasRemovidasNoPeriodo = funil.filter(
     (r) => rotuloDaTela(r.screen).removida
@@ -297,6 +346,28 @@ export default async function DashboardPage({
             </button>
           </form>
         </header>
+
+        {/* ── Abas ── */}
+        <nav className="mb-5 flex gap-1 border-b border-marfim/10">
+          {[
+            { chave: "geral", rotulo: "Visão geral" },
+            { chave: "anuncios", rotulo: "Anúncios" },
+          ].map((t) => (
+            <Link
+              key={t.chave}
+              href={comParams(
+                t.chave === "geral" ? {} : { aba: t.chave, por }
+              )}
+              className={`-mb-px border-b-2 px-4 py-2 text-sm transition ${
+                aba === t.chave
+                  ? "border-rose text-marfim"
+                  : "border-transparent text-nevoa hover:text-marfim"
+              }`}
+            >
+              {t.rotulo}
+            </Link>
+          ))}
+        </nav>
 
         {/* ── Filtro de data ── */}
         <div className="mb-6">
@@ -334,6 +405,25 @@ export default async function DashboardPage({
           <Kpi rotulo="Receita" valor={brl(Number(o.receita) || 0)} destaque />
         </section>
 
+        {aba === "anuncios" && anuncios && (
+          <Card titulo="Retenção do quiz por anúncio">
+            {sessoesTruncadas && (
+              <Aviso>
+                Leitura limitada às {num(SESSOES_TETO)} sessões mais recentes do
+                período — os números abaixo cobrem só essa fatia. Filtre um
+                intervalo menor para ver o período inteiro.
+              </Aviso>
+            )}
+            <AdsPanel
+              resumo={anuncios}
+              por={por}
+              hrefPara={(p: Agrupamento) => comParams({ aba: "anuncios", por: p })}
+            />
+          </Card>
+        )}
+
+        {aba === "geral" && (
+          <>
         {/* ── Conversão & abandono ── */}
         <Card titulo="Conversão & abandono">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
@@ -567,6 +657,9 @@ export default async function DashboardPage({
             />
           )}
         </Card>
+
+          </>
+        )}
 
         <p className="mt-8 text-center text-xs text-nevoa/60">
           Reembolsos e chargebacks abatem a receita automaticamente. Datas no fuso

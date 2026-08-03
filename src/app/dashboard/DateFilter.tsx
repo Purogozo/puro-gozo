@@ -21,14 +21,26 @@ export default function DateFilter() {
   const [to, setTo] = useState(sp.get("to") ?? "");
   const [open, setOpen] = useState(range === "custom");
 
-  const go = (next: string) => router.push(`/dashboard?range=${next}`);
+  // Mantém aba/agrupamento ao trocar o período — sem isto, clicar em "Hoje"
+  // dentro da aba de anúncios jogava a pessoa de volta pra visão geral.
+  const url = (params: Record<string, string>) => {
+    const q = new URLSearchParams();
+    for (const [k, v] of Object.entries(params)) q.set(k, v);
+    for (const k of ["aba", "por"]) {
+      const v = sp.get(k);
+      if (v) q.set(k, v);
+    }
+    return `/dashboard?${q.toString()}`;
+  };
+
+  const go = (next: string) => router.push(url({ range: next }));
 
   const applyCustom = (e: React.FormEvent) => {
     e.preventDefault();
     if (!from || !to) return;
     // ordena caso o usuário inverta as datas
     const [a, b] = from <= to ? [from, to] : [to, from];
-    router.push(`/dashboard?range=custom&from=${a}&to=${b}`);
+    router.push(url({ range: "custom", from: a, to: b }));
   };
 
   const chip = (active: boolean) =>
