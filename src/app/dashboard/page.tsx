@@ -4,8 +4,14 @@
 
 import { Suspense } from "react";
 import { isAuthenticated } from "@/lib/dashboard-auth";
-import { sbRpcRows, supabaseReady } from "@/lib/supabase";
+import { sbRpcRows, sbSelect, supabaseReady } from "@/lib/supabase";
 import { fetchDailySpend, metaAdsReady } from "@/lib/meta-ads";
+import {
+  rotuloDaTela,
+  headlineDaVariante,
+  apelidoDaVariante,
+  TESTE_HEADLINE_DESDE,
+} from "./quiz-meta";
 import LoginForm from "./LoginForm";
 import DateFilter from "./DateFilter";
 import SalesChart, { type DayPoint } from "./SalesChart";
@@ -42,6 +48,17 @@ type VariantRow = {
 };
 type SalesRow = { dia: string; vendas: number; receita: number | null };
 type StatusRow = { event_type: string; quantidade: number; valor: number | null };
+type PurchaseRow = { variant: string | null; value: number | null };
+
+// Uma linha do teste A/B/C: a variante inteira, somando os dois caminhos.
+type TesteRow = {
+  variant: string;
+  sessoes: number;
+  completaram: number;
+  foram_checkout: number;
+  vendas: number;
+  receita: number;
+};
 
 const num = (n: number) => new Intl.NumberFormat("pt-BR").format(n);
 const brl = (n: number) =>
@@ -154,14 +171,23 @@ export default async function DashboardPage({
 
   // Consultas em paralelo — nenhuma depende da outra. O gasto de anúncio vem da
   // Meta Ads API (best-effort: falha → mapa vazio, investimento 0).
-  const [overviewRows, funil, variantes, vendas, status, gasto] = await Promise.all([
-    sbRpcRows<Overview>("pg_overview_range", args),
-    sbRpcRows<FunnelRow>("pg_funnel_screens_range", args),
-    sbRpcRows<VariantRow>("pg_funnel_by_variant_range", args),
-    sbRpcRows<SalesRow>("pg_sales_daily_range", args),
-    sbRpcRows<StatusRow>("pg_purchases_by_status_range", args),
-    fetchDailySpend(range.sinceDay, range.untilDay),
-  ]);
+  const [overviewRows, funil, variantes, vendas, status, gasto, compras] =
+    await Promise.all([
+      sbRpcRows<Overview>("pg_overview_range", args),
+      sbRpcRows<FunnelRow>("pg_funnel_screens_range", args),
+      sbRpcRows<VariantRow>("pg_funnel_by_variant_range", args),
+      sbRpcRows<SalesRow>("pg_sales_daily_range", args),
+      sbRpcRows<StatusRow>("pg_purchases_by_status_range", args),
+      fetchDailySpend(range.sinceDay, range.untilDay),
+      // Vendas por variante. Vem por SELECT direto (e não por uma função nova)
+      // pra não depender de rodar migração no Supabase — o volume é pequeno e a
+      // chave é a secreta, server-only. Mesma regra de "venda" do pg_overview.
+      sbSelect<PurchaseRow>(
+        "pg_purchases",
+        `select=variant,value&event_type=in.(PURCHASE_APPROVED,PURCHASE_COMPLETE)` +
+          `&created_at=gte.${range.from}&created_at=lt.${range.to}&limit=5000`
+      ),
+    ]);
 
   // Série por dia pro gráfico: faturamento (Hotmart) + investimento (Meta Ads),
   // lucro = faturamento − investimento. Eixo X = todos os dias do período (o
@@ -196,6 +222,65 @@ export default async function DashboardPage({
   const topo = funil[0]?.sessoes ?? 0;
   const ticket = o.vendas > 0 ? Number(o.receita) / o.vendas : 0;
   const semDados = o.sessoes === 0 && funil.length === 0 && o.vendas === 0;
+
+  // ── Teste da headline (T1) ──────────────────────────────────
+  // pg_funnel_by_variant devolve uma linha por (variante × caminho). Para ler o
+  // teste da headline o caminho é ruído: a headline é a mesma nos dois. Aqui as
+  // linhas viram uma por variante, com as vendas coladas por cima.
+  const vendasPorVariante = new Map<string, { vendas: number; receita: number }>();
+  for (const c of compras) {
+    const v = c.variant ?? "desconhecida";
+    const acc = vendasPorVariante.get(v) ?? { vendas: 0, receita: 0 };
+    acc.vendas += 1;
+    acc.receita += Number(c.value ?? 0);
+    vendasPorVariante.set(v, acc);
+  }
+
+  const porVariante = new Map<string, TesteRow>();
+  for (const v of variantes) {
+    const cur =
+      porVariante.get(v.variant) ??
+      ({
+        variant: v.variant,
+        sessoes: 0,
+        completaram: 0,
+        foram_checkout: 0,
+        vendas: 0,
+        receita: 0,
+      } as TesteRow);
+    cur.sessoes += Number(v.sessoes);
+    cur.completaram += Number(v.completaram);
+    cur.foram_checkout += Number(v.foram_checkout);
+    porVariante.set(v.variant, cur);
+  }
+  for (const [variant, s] of vendasPorVariante) {
+    // Uma venda pode cair num período em que a sessão começou antes; nesse caso
+    // a variante aparece só aqui. Melhor mostrar a linha que engolir a venda.
+    const cur =
+      porVariante.get(variant) ??
+      ({
+        variant,
+        sessoes: 0,
+        completaram: 0,
+        foram_checkout: 0,
+        vendas: 0,
+        receita: 0,
+      } as TesteRow);
+    cur.vendas = s.vendas;
+    cur.receita = s.receita;
+    porVariante.set(variant, cur);
+  }
+  const teste = [...porVariante.values()].sort((a, b) =>
+    a.variant.localeCompare(b.variant)
+  );
+
+  // O período atravessa a virada do teste? Antes de 02/08 as letras a/b eram
+  // outras headlines (e mudavam também o CTA da T19) — somar os dois lados dá
+  // um número que não significa nada.
+  const periodoMistura = range.sinceDay < TESTE_HEADLINE_DESDE;
+  const telasRemovidasNoPeriodo = funil.filter(
+    (r) => rotuloDaTela(r.screen).removida
+  );
 
   return (
     <main className="min-h-dvh bg-indigo px-4 py-8 sm:px-8">
@@ -278,44 +363,163 @@ export default async function DashboardPage({
           {funil.length === 0 ? (
             <Vazio />
           ) : (
-            <ul className="space-y-1.5">
-              {funil.map((r) => {
-                const largura = topo > 0 ? (r.sessoes / topo) * 100 : 0;
-                const queda = Number(r.queda_pct ?? 0);
-                return (
-                  <li key={r.screen} className="flex items-center gap-3 text-sm">
-                    <span className="w-10 shrink-0 text-right text-nevoa">
-                      T{r.screen}
-                    </span>
-                    <div className="h-6 flex-1 overflow-hidden rounded bg-marfim/10">
-                      <div
-                        className="h-full rounded bg-rose"
-                        style={{ width: `${Math.max(largura, 1)}%` }}
-                      />
-                    </div>
-                    <span className="w-14 shrink-0 text-right text-marfim">
-                      {num(r.sessoes)}
-                    </span>
-                    <span className="w-14 shrink-0 text-right text-nevoa">
-                      {r.pct_do_inicio ?? "—"}%
-                    </span>
-                    {/* queda relevante em destaque: é onde está o vazamento */}
-                    <span
-                      className={`w-16 shrink-0 text-right ${
-                        queda >= 20 ? "font-medium text-rose" : "text-nevoa/60"
-                      }`}
+            <>
+              {telasRemovidasNoPeriodo.length > 0 && (
+                <Aviso>
+                  O período inclui tela que não existe mais no quiz (
+                  {telasRemovidasNoPeriodo.map((r) => `T${r.screen}`).join(", ")}
+                  ). A queda das telas vizinhas mistura fluxo antigo e novo —
+                  para ler o funil de hoje, filtre a partir de{" "}
+                  {TESTE_HEADLINE_DESDE.split("-").reverse().join("/")}.
+                </Aviso>
+              )}
+              <ul className="space-y-1.5">
+                {funil.map((r) => {
+                  const largura = topo > 0 ? (r.sessoes / topo) * 100 : 0;
+                  const queda = Number(r.queda_pct ?? 0);
+                  const rotulo = rotuloDaTela(r.screen);
+                  return (
+                    <li
+                      key={r.screen}
+                      className="flex items-center gap-3 text-sm"
                     >
-                      {r.queda_pct != null ? `−${r.queda_pct}%` : ""}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
+                      <span
+                        className={`w-44 shrink-0 truncate text-left ${
+                          rotulo.removida
+                            ? "text-nevoa/40 line-through"
+                            : "text-nevoa"
+                        }`}
+                        title={rotulo.texto}
+                      >
+                        <span className="text-marfim/70">T{r.screen}</span>{" "}
+                        {rotulo.texto}
+                      </span>
+                      <div className="h-6 flex-1 overflow-hidden rounded bg-marfim/10">
+                        <div
+                          className={`h-full rounded ${
+                            rotulo.removida ? "bg-nevoa/40" : "bg-rose"
+                          }`}
+                          style={{ width: `${Math.max(largura, 1)}%` }}
+                        />
+                      </div>
+                      <span className="w-14 shrink-0 text-right text-marfim">
+                        {num(r.sessoes)}
+                      </span>
+                      <span className="w-14 shrink-0 text-right text-nevoa">
+                        {r.pct_do_inicio ?? "—"}%
+                      </span>
+                      {/* queda relevante em destaque: é onde está o vazamento */}
+                      <span
+                        className={`w-16 shrink-0 text-right ${
+                          queda >= 20 ? "font-medium text-rose" : "text-nevoa/60"
+                        }`}
+                      >
+                        {r.queda_pct != null ? `−${r.queda_pct}%` : ""}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </>
           )}
         </Card>
 
-        {/* ── A/B e caminho ── */}
-        <Card titulo="Por variante e caminho">
+        {/* ── Teste A/B/C da headline da T1 ── */}
+        <Card titulo="Teste da headline (T1)">
+          {periodoMistura && (
+            <Aviso>
+              Até {TESTE_HEADLINE_DESDE.split("-").reverse().join("/")} as letras
+              A e B eram outras headlines (e mudavam também o CTA da T19). Este
+              período mistura os dois testes — para comparar, filtre a partir
+              dessa data.
+            </Aviso>
+          )}
+          {teste.length === 0 ? (
+            <Vazio />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead>
+                  <tr className="text-nevoa">
+                    {[
+                      "Variante",
+                      "Headline em teste",
+                      "Sessões",
+                      "Completaram",
+                      "Checkout",
+                      "Vendas",
+                      "Sessão → Venda",
+                    ].map((c) => (
+                      <th key={c} className="pb-2 pr-4 font-normal">
+                        {c}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="text-marfim">
+                  {teste.map((t) => {
+                    const headline = headlineDaVariante(t.variant);
+                    return (
+                      <tr
+                        key={t.variant}
+                        className="border-t border-marfim/10 align-top"
+                      >
+                        <td className="py-2 pr-4 whitespace-nowrap">
+                          <span className="font-medium">
+                            {t.variant.toUpperCase()}
+                          </span>
+                          <span className="block text-xs text-nevoa">
+                            {apelidoDaVariante(t.variant)}
+                          </span>
+                        </td>
+                        <td className="max-w-xs py-2 pr-4 text-xs text-nevoa">
+                          {headline ?? (
+                            <span className="italic">
+                              variante fora do teste atual
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-2 pr-4">{num(t.sessoes)}</td>
+                        <td className="py-2 pr-4">
+                          {num(t.completaram)}{" "}
+                          <span className="text-xs text-nevoa">
+                            ({pct(t.completaram, t.sessoes)})
+                          </span>
+                        </td>
+                        <td className="py-2 pr-4">
+                          {num(t.foram_checkout)}{" "}
+                          <span className="text-xs text-nevoa">
+                            ({pct(t.foram_checkout, t.sessoes)})
+                          </span>
+                        </td>
+                        <td className="py-2 pr-4">
+                          {num(t.vendas)}
+                          {t.vendas > 0 && (
+                            <span className="block text-xs text-nevoa">
+                              {brl(t.receita)}
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-2 pr-4">{pct(t.vendas, t.sessoes)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+          <p className="mt-3 text-xs text-nevoa/70">
+            As 3 variantes mudam <strong>só a headline da T1</strong> — foto,
+            eyebrow, subhead e a pergunta da idade são idênticas, então a
+            diferença entre as linhas é o efeito da promessa. A distribuição é
+            ~⅓ para cada, fixada por cookie na primeira visita. Para ver uma
+            variante você mesma: <code>?v=a</code>, <code>?v=b</code> ou{" "}
+            <code>?v=c</code> na URL do quiz.
+          </p>
+        </Card>
+
+        {/* ── A/B e caminho (detalhe: a mesma variante aberta por caminho) ── */}
+        <Card titulo="Variante × caminho (A = com parceiro · B = sozinha)">
           {variantes.length === 0 ? (
             <Vazio />
           ) : (
@@ -440,6 +644,15 @@ function Card({ titulo, children }: { titulo: string; children: React.ReactNode 
 
 function Vazio() {
   return <p className="text-sm text-nevoa/60">Sem dados no período.</p>;
+}
+
+// Aviso de leitura: aparece quando o período compara coisas diferentes.
+function Aviso({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="mb-4 rounded-lg border-l-2 border-rose bg-rose/10 px-4 py-3 text-xs leading-relaxed text-marfim/90">
+      {children}
+    </p>
+  );
 }
 
 function Tabela({

@@ -42,6 +42,29 @@ function asText(v: unknown, max = 120): string | null {
   return typeof v === "string" && v.length > 0 ? v.slice(0, max) : null;
 }
 
+const LOCAL_RE = /^(localhost|127\.0\.0\.1|\[::1\]|::1|.+\.local)(:\d+)?$/i;
+
+function hostDe(url: string | null): string | null {
+  if (!url) return null;
+  try {
+    return new URL(url).host;
+  } catch {
+    return null;
+  }
+}
+
+// Rodar o app na máquina (npm run dev, next start) aponta pro MESMO Supabase de
+// produção — então cada teste nosso virava sessão no funil e, pior, sessão com
+// variante, diluindo a leitura do teste A/B. Tráfego local passa a entrar como
+// preview: o evento fica gravado (dá pra depurar), mas fora do funil e sem
+// criar sessão. Checa o Host do request E a landing_url, porque a página pode
+// ser aberta por 127.0.0.1 e o beacon sair com localhost, ou vice-versa.
+function origemLocal(req: NextRequest, landingUrl: string | null): boolean {
+  return [req.headers.get("host"), hostDe(landingUrl)].some(
+    (h) => !!h && LOCAL_RE.test(h)
+  );
+}
+
 export async function POST(req: NextRequest) {
   if (!supabaseReady) return noContent();
 
@@ -62,7 +85,8 @@ export async function POST(req: NextRequest) {
   const path = asText(body.path, 40);
   const profile = asText(body.profile, 40);
   const variant = asText(body.variant, 10);
-  const isPreview = body.preview === true;
+  const landingUrl = asText(body.landing_url, 800);
+  const isPreview = body.preview === true || origemLocal(req, landingUrl);
   const utm =
     body.utm && typeof body.utm === "object" ? (body.utm as object) : {};
 
@@ -118,7 +142,7 @@ export async function POST(req: NextRequest) {
         p_fbc: asText(body.fbc, 400),
         p_client_ip: clientIp,
         p_user_agent: userAgent,
-        p_landing_url: asText(body.landing_url, 800),
+        p_landing_url: landingUrl,
       });
     } catch (err) {
       console.error("[analytics] upsert sessão:", err);
