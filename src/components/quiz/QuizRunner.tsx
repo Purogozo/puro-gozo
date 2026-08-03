@@ -38,6 +38,19 @@ export function QuizRunner({ variant = "a" }: { variant?: Variant }) {
   const hydrated = useQuiz((s) => s.hydrated);
   const path = useQuiz((s) => s.path());
   const profileKey = useQuiz((s) => s.profile());
+  // O caminho SÓ existe depois da T3 — antes dela, `path()` devolve "B" por
+  // padrão só pra ter o que renderizar. Mandar esse "B" pro analytics carimbava
+  // a sessão inteira como "sozinha" logo no primeiro screen_view (o
+  // pg_upsert_session guarda o primeiro valor não-nulo), e o valor certo, que
+  // chega depois, era descartado. Enquanto a T3 não foi respondida vai
+  // undefined: o dashboard mostra "desconhecido", que é a verdade.
+  //
+  // Mesma história com o perfil, que vem da T13 e cai em "programacao" por
+  // padrão: sem esse guard toda sessão nascia carimbada como "A Bem-Comportada".
+  const bifurcou = useQuiz((s) => s.answers[3] != null);
+  const perfilado = useQuiz((s) => s.answers[13] != null);
+  const pathReal = bifurcou ? path : undefined;
+  const profileReal = perfilado ? profileKey : undefined;
   const meter = useQuiz((s) => s.meter());
   const goToScreenId = useQuiz((s) => s.goToScreenId);
   const reset = useQuiz((s) => s.reset);
@@ -92,14 +105,15 @@ export function QuizRunner({ variant = "a" }: { variant?: Variant }) {
   useEffect(() => {
     if (!hydrated || !screen) return;
     window.scrollTo({ top: 0, behavior: reduced ? "auto" : "smooth" });
-    trackEvent("screen_view", { screen: screen.id, type: screen.type, path, variant });
-    if (screen.type === "result") trackEvent("quiz_complete", { path, profile: profileKey, variant });
+    trackEvent("screen_view", { screen: screen.id, type: screen.type, path: pathReal, variant });
+    if (screen.type === "result")
+      trackEvent("quiz_complete", { path: pathReal, profile: profileReal, variant });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index, hydrated]);
 
   function goCheckout() {
-    trackEvent("cta_click", { screen: 20, path, profile: profileKey, variant });
-    trackEvent("checkout_redirect", { path, profile: profileKey, variant });
+    trackEvent("cta_click", { screen: 20, path: pathReal, profile: profileReal, variant });
+    trackEvent("checkout_redirect", { path: pathReal, profile: profileReal, variant });
     // O session_id viaja no xcod até a Hotmart e volta no webhook — é o que
     // liga a venda à sessão de quiz que a gerou e permite reidratar o Purchase
     // com fbp/fbc/IP/user-agent guardados no Supabase.
