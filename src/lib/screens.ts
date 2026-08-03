@@ -49,27 +49,13 @@ export const SCREENS: Screen[] = [
       subhead:
         "Responde as próximas perguntas e eu monto o seu caminho de volta ao prazer. Menos de 2 minutos, só entre nós, suas respostas são privadas.",
       prompt: "Vamos começar. Me conta primeiro: qual a sua idade?",
+      // Sem `echo` aqui de propósito (02/08): na T1 o toque avança direto, sem
+      // texto no meio. O eco das telas de dentro continua funcionando normal.
       options: [
-        {
-          id: "29-",
-          label: "Menos de 29",
-          echo: "Antes dos 29, o desejo raramente vem pronto, ele é aprendido. Dá pra começar certo.",
-        },
-        {
-          id: "29-39",
-          label: "29 a 39",
-          echo: "Entre 29 e 39, o desejo costuma travar no acúmulo: rotina, cobrança, cabeça cheia.",
-        },
-        {
-          id: "40-49",
-          label: "40 a 49",
-          echo: "Dos 40 aos 49 o desejo não morre, ele é silenciado. Faz sentido você estar aqui.",
-        },
-        {
-          id: "50+",
-          label: "50 ou mais",
-          echo: "Aos 50+, ninguém te disse, mas o tesão não tem prazo de validade. Tem é camada por cima.",
-        },
+        { id: "29-", label: "Menos de 29" },
+        { id: "29-39", label: "29 a 39" },
+        { id: "40-49", label: "40 a 49" },
+        { id: "50+", label: "50 ou mais" },
       ],
     },
   },

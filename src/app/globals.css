@@ -197,12 +197,6 @@ body {
   animation: reveal-up 0.55s var(--ease-diary) both;
 }
 
-/* Eco de auto-relevância da T1 (mesma entrada do eco das telas de dentro, que
-   lá é feito com Framer — aqui é CSS pra não trazer o Framer pro caminho crítico) */
-.echo-in {
-  animation: reveal-up 0.45s var(--ease-diary) both;
-}
-
 /* Scrollbar discreta */
 ::-webkit-scrollbar {
   width: 8px;
@@ -221,8 +215,7 @@ body {
   .cta-pulse,
   .bob,
   .wave-anim,
-  .landing-reveal,
-  .echo-in {
+  .landing-reveal {
     animation: none !important;
   }
   .grain::after {

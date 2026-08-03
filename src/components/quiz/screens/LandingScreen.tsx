@@ -73,9 +73,6 @@ export function LandingScreen({
   const options = content.options ?? [];
   const selected =
     clicked ?? (restore && onLanding ? (stored ?? null) : null);
-  const echo = selected
-    ? (options.find((o) => o.id === selected)?.echo ?? null)
-    : null;
 
   function choose(opt: Option) {
     if (clicked) return; // trava toque duplo enquanto o eco está na tela
@@ -94,15 +91,10 @@ export function LandingScreen({
       if (useQuiz.getState().index === 0) next();
     };
 
-    const reduced = prefersReduced();
-    if (opt.echo) {
-      // micro-recompensa de auto-relevância antes de avançar. Mais curta que a
-      // das telas de dentro (1,5s vs 2,1s): aqui é o primeiro toque da pessoa,
-      // e o que mais importa nesse ponto é a sensação de andar.
-      window.setTimeout(advance, reduced ? 500 : 1500);
-    } else {
-      window.setTimeout(advance, reduced ? 120 : 380);
-    }
+    // Toque → próxima tela, sem texto no meio. O delay curto não é espera: é o
+    // tempo de a opção acender e o toque virar resposta na cabeça de quem
+    // clicou. Sem ele a tela troca antes do dedo sair e parece erro de clique.
+    window.setTimeout(advance, prefersReduced() ? 120 : 300);
   }
 
   return (
@@ -181,16 +173,6 @@ export function LandingScreen({
             })}
           </div>
         </div>
-
-        {/* eco de auto-relevância depois da escolha */}
-        {echo && (
-          <p className="echo-in mt-4 flex max-w-md items-start gap-2 rounded-2xl bg-white/[0.06] px-4 py-3 text-left font-serif text-[0.95rem] italic leading-snug text-rose-suave">
-            <span className="not-italic text-rose" aria-hidden>
-              ✓
-            </span>
-            {echo}
-          </p>
-        )}
       </div>
     </div>
   );
