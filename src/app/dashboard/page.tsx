@@ -14,6 +14,7 @@ import {
   TESTE_HEADLINE_DESDE,
 } from "./quiz-meta";
 import AdsPanel from "./AdsPanel";
+import AnswersPanel from "./AnswersPanel";
 import {
   agregaAnuncios,
   normalizaAgrupamento,
@@ -21,6 +22,7 @@ import {
   type PurchaseSessionRow,
   type SessionRow,
 } from "./ads";
+import { montaRespostas, type AnswerRow } from "./answers";
 import LoginForm from "./LoginForm";
 import DateFilter from "./DateFilter";
 import SalesChart, { type DayPoint } from "./SalesChart";
@@ -186,7 +188,8 @@ export default async function DashboardPage({
   const sp = await searchParams;
   const range = resolveRange(sp);
   const args = { p_from: range.from, p_to: range.to };
-  const aba = sp.aba === "anuncios" ? "anuncios" : "geral";
+  const aba =
+    sp.aba === "anuncios" || sp.aba === "respostas" ? sp.aba : "geral";
   const por = normalizaAgrupamento(sp.por);
 
   // Links das abas e do agrupamento preservam o período que está na URL —
@@ -203,33 +206,46 @@ export default async function DashboardPage({
 
   // Consultas em paralelo — nenhuma depende da outra. O gasto de anúncio vem da
   // Meta Ads API (best-effort: falha → mapa vazio, investimento 0).
-  const [overviewRows, funil, variantes, vendas, status, gasto, compras, sessoes] =
-    await Promise.all([
-      sbRpcRows<Overview>("pg_overview_range", args),
-      sbRpcRows<FunnelRow>("pg_funnel_screens_range", args),
-      sbRpcRows<VariantRow>("pg_funnel_by_variant_range", args),
-      sbRpcRows<SalesRow>("pg_sales_daily_range", args),
-      sbRpcRows<StatusRow>("pg_purchases_by_status_range", args),
-      fetchDailySpend(range.sinceDay, range.untilDay),
-      // Vendas por variante. Vem por SELECT direto (e não por uma função nova)
-      // pra não depender de rodar migração no Supabase — o volume é pequeno e a
-      // chave é a secreta, server-only. Mesma regra de "venda" do pg_overview.
-      sbSelect<PurchaseRow>(
-        "pg_purchases",
-        `select=variant,value,session_id&event_type=in.(PURCHASE_APPROVED,PURCHASE_COMPLETE)` +
-          `&created_at=gte.${range.from}&created_at=lt.${range.to}&limit=5000`
-      ),
-      // Sessões cruas só quando a aba de anúncios está aberta: é a consulta
-      // mais pesada da página e a visão geral não usa nada disso.
-      aba === "anuncios"
-        ? sbSelect<SessionRow>(
-            "pg_sessions",
-            `select=session_id,max_screen,completed,checkout_click,landing_url,utm` +
-              `&started_at=gte.${range.from}&started_at=lt.${range.to}` +
-              `&order=started_at.desc&limit=${SESSOES_TETO}`
-          )
-        : Promise.resolve<SessionRow[]>([]),
-    ]);
+  const [
+    overviewRows,
+    funil,
+    variantes,
+    vendas,
+    status,
+    gasto,
+    compras,
+    sessoes,
+    respostas,
+  ] = await Promise.all([
+    sbRpcRows<Overview>("pg_overview_range", args),
+    sbRpcRows<FunnelRow>("pg_funnel_screens_range", args),
+    sbRpcRows<VariantRow>("pg_funnel_by_variant_range", args),
+    sbRpcRows<SalesRow>("pg_sales_daily_range", args),
+    sbRpcRows<StatusRow>("pg_purchases_by_status_range", args),
+    fetchDailySpend(range.sinceDay, range.untilDay),
+    // Vendas por variante. Vem por SELECT direto (e não por uma função nova)
+    // pra não depender de rodar migração no Supabase — o volume é pequeno e a
+    // chave é a secreta, server-only. Mesma regra de "venda" do pg_overview.
+    sbSelect<PurchaseRow>(
+      "pg_purchases",
+      `select=variant,value,session_id&event_type=in.(PURCHASE_APPROVED,PURCHASE_COMPLETE)` +
+        `&created_at=gte.${range.from}&created_at=lt.${range.to}&limit=5000`
+    ),
+    // Sessões cruas só quando a aba de anúncios está aberta: é a consulta
+    // mais pesada da página e a visão geral não usa nada disso.
+    aba === "anuncios"
+      ? sbSelect<SessionRow>(
+          "pg_sessions",
+          `select=session_id,max_screen,completed,checkout_click,landing_url,utm` +
+            `&started_at=gte.${range.from}&started_at=lt.${range.to}` +
+            `&order=started_at.desc&limit=${SESSOES_TETO}`
+        )
+      : Promise.resolve<SessionRow[]>([]),
+    // Respostas por tela: idem, só quando a aba está aberta.
+    aba === "respostas"
+      ? sbRpcRows<AnswerRow>("pg_answers_range", args)
+      : Promise.resolve<AnswerRow[]>([]),
+  ]);
 
   // Série por dia pro gráfico: faturamento (Hotmart) + investimento (Meta Ads),
   // lucro = faturamento − investimento. Eixo X = todos os dias do período (o
@@ -324,6 +340,9 @@ export default async function DashboardPage({
     aba === "anuncios"
       ? agregaAnuncios(sessoes, compras as PurchaseSessionRow[], por)
       : null;
+
+  // Respostas por tela (aba "Respostas").
+  const grupos = aba === "respostas" ? montaRespostas(respostas) : null;
   const sessoesTruncadas = sessoes.length >= SESSOES_TETO;
 
   const periodoMistura = range.sinceDay < TESTE_HEADLINE_DESDE;
@@ -351,12 +370,17 @@ export default async function DashboardPage({
         <nav className="mb-5 flex gap-1 border-b border-marfim/10">
           {[
             { chave: "geral", rotulo: "Visão geral" },
+            { chave: "respostas", rotulo: "Respostas" },
             { chave: "anuncios", rotulo: "Anúncios" },
           ].map((t) => (
             <Link
               key={t.chave}
               href={comParams(
-                t.chave === "geral" ? {} : { aba: t.chave, por }
+                t.chave === "geral"
+                  ? {}
+                  : t.chave === "anuncios"
+                    ? { aba: t.chave, por } // o agrupamento é só da aba de anúncios
+                    : { aba: t.chave }
               )}
               className={`-mb-px border-b-2 px-4 py-2 text-sm transition ${
                 aba === t.chave
@@ -404,6 +428,19 @@ export default async function DashboardPage({
           />
           <Kpi rotulo="Receita" valor={brl(Number(o.receita) || 0)} destaque />
         </section>
+
+        {aba === "respostas" && grupos && (
+          <Card titulo="Respostas mais escolhidas em cada tela">
+            <p className="mb-5 text-xs leading-relaxed text-nevoa/70">
+              A porcentagem é sobre <strong>quem respondeu aquela tela</strong>,
+              não sobre o total de sessões — assim a leitura não encolhe conforme
+              o funil afunila. Cada sessão conta uma vez por opção. As telas que
+              bifurcam aparecem em duas colunas: as opções são diferentes de cada
+              lado, e somá-las inventaria uma resposta que ninguém deu.
+            </p>
+            <AnswersPanel grupos={grupos} />
+          </Card>
+        )}
 
         {aba === "anuncios" && anuncios && (
           <Card titulo="Retenção do quiz por anúncio">
