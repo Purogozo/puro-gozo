@@ -6,7 +6,6 @@ import { useQuiz } from "@/lib/store";
 import { AB, type Variant } from "@/lib/ab";
 import { haptic } from "@/lib/haptic";
 import { trackEvent } from "@/lib/tracking";
-import { Logo } from "@/components/brand/Logo";
 import { AndreiaPhoto } from "@/components/brand/AndreiaPhoto";
 
 // T1 · landing SEM Framer Motion.
@@ -109,35 +108,39 @@ export function LandingScreen({
       />
 
       <div
-        className={`relative z-10 mx-auto flex min-h-dvh w-full max-w-xl flex-col items-center justify-center px-6 py-6 text-center ${
+        className={`relative z-10 mx-auto flex min-h-dvh w-full max-w-xl flex-col items-center justify-center px-6 py-4 text-center ${
           animateIn ? "landing-reveal" : ""
         }`}
       >
-        <Logo tone="marfim" className="text-xl" />
+        {/* Sem o logo aqui de propósito. Ele custava ~44px da dobra numa tela
+            que já está no limite, e quem chega vem de um anúncio da Andreia:
+            o rosto + "sexóloga" identificam melhor que a marca, que é
+            desconhecida no clique frio. Bônus: tira a palavra "Gozo" do HTML
+            servido, que é o que o rastreador da Meta lê nesta página. */}
 
         {/* rosto da sexóloga = ponte com os primeiros 10s do anúncio.
             Vale ser generoso no tamanho: é reconhecimento facial, não enfeite. */}
-        <AndreiaPhoto className="mt-4 h-[150px] w-[150px] shrink-0 sm:h-[168px] sm:w-[168px]" />
+        <AndreiaPhoto className="h-[150px] w-[150px] shrink-0 sm:h-[168px] sm:w-[168px]" />
 
-        <p className="eyebrow mt-3 text-rose">{content.eyebrow}</p>
+        <p className="eyebrow mt-5 text-rose">{content.eyebrow}</p>
 
         {/* headline: o ÚNICO elemento que muda entre as variantes A/B/C */}
         <h1
-          className="mt-2.5 font-serif text-[1.6rem] leading-[1.18] tracking-[-0.01em] text-marfim sm:text-[2.05rem]"
+          className="mt-3.5 font-serif text-[1.6rem] leading-[1.22] tracking-[-0.01em] text-marfim sm:text-[2.05rem]"
           style={{ fontWeight: 700 }}
         >
           {headline}
         </h1>
 
         <p
-          className="mt-3.5 max-w-md font-sans text-[0.94rem] leading-relaxed text-nevoa"
+          className="mt-5 max-w-md font-sans text-[0.94rem] leading-[1.7] text-nevoa"
           style={{ fontWeight: 300 }}
         >
           {content.subhead}
         </p>
 
         {/* primeira pergunta = o CTA. Sem botão que não pergunta nada. */}
-        <div className="mt-5 w-full max-w-md">
+        <div className="mt-8 w-full max-w-md">
           {content.prompt && (
             <p
               id="t1-prompt"
@@ -150,7 +153,7 @@ export function LandingScreen({
           <div
             role="group"
             aria-labelledby={content.prompt ? "t1-prompt" : undefined}
-            className="mt-3.5 grid grid-cols-2 gap-2"
+            className="mt-4 grid grid-cols-2 gap-2.5"
           >
             {options.map((opt) => {
               const isSelected = selected === opt.id;
@@ -160,7 +163,7 @@ export function LandingScreen({
                   type="button"
                   onClick={() => choose(opt)}
                   aria-pressed={isSelected}
-                  className={`min-h-[54px] rounded-2xl border px-3 py-3 font-sans text-[0.95rem] leading-snug transition-colors duration-300 active:scale-[0.98] ${
+                  className={`min-h-[56px] rounded-2xl border px-3 py-3 font-sans text-[0.95rem] leading-snug transition-colors duration-300 active:scale-[0.98] ${
                     isSelected
                       ? "border-rose bg-rose/20 text-marfim"
                       : "border-nevoa/30 bg-white/[0.05] text-marfim hover:border-rose/70"
