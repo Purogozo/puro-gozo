@@ -3,9 +3,22 @@
 // (edite estes valores: não precisa mexer em componentes)
 // ============================================================
 
-// Checkout Hotmart: link real do produto (env sobrescreve se precisar)
+// ⚠️ DUAS OFERTAS, UM PRODUTO SÓ.
+// O app serve dois funis: o quiz em /quiz (R$ 47) e a página de vendas em /
+// (R$ 97). Os dois vendem o MESMO produto na Hotmart (R106650092U) — o que
+// separa as ofertas é o parâmetro `off` na URL de checkout. Se ele se perder,
+// a pessoa lê um preço na página e paga outro no checkout.
+// `withParams` (params.ts) anexa as UTMs com searchParams.set, que preserva
+// a query da base. Não trocar por concatenação de string.
+
+// Checkout do QUIZ — oferta de R$ 47 (env sobrescreve se precisar)
 export const CHECKOUT_URL =
   process.env.NEXT_PUBLIC_CHECKOUT_URL ?? "https://pay.hotmart.com/R106650092U";
+
+// Checkout da PÁGINA DE VENDAS — oferta de R$ 97
+export const SALES_CHECKOUT_URL =
+  process.env.NEXT_PUBLIC_SALES_CHECKOUT_URL ??
+  "https://pay.hotmart.com/R106650092U?off=jqxrq4se";
 
 // Endpoint de analytics (screen_view, option_select, etc.) → Supabase.
 // Default aponta pra rota interna: em produção funciona sem env nenhuma.
@@ -17,9 +30,20 @@ export const ANALYTICS_ENDPOINT =
 export const META_PIXEL_ID =
   process.env.NEXT_PUBLIC_META_PIXEL_ID ?? "902002282309973";
 
-// Valor da oferta para os eventos do Pixel (Lead / InitiateCheckout)
-export const OFFER_VALUE = 47;
+// Valor da oferta para os eventos do Pixel (Lead / InitiateCheckout).
+// O servidor é a autoridade sobre esses números (ver api/meta/capi/route.ts):
+// o cliente só diz de QUAL funil veio o evento, nunca quanto ele vale.
+export const OFFER_VALUE = 47; // funil do quiz
+export const SALES_OFFER_VALUE = 97; // página de vendas
 export const OFFER_CURRENCY = "BRL";
+
+// Valor autoritativo por funil — a única fonte que o Route Handler consulta.
+export const FUNNEL_VALUE = {
+  quiz: OFFER_VALUE,
+  vendas: SALES_OFFER_VALUE,
+} as const;
+
+export type Funnel = keyof typeof FUNNEL_VALUE;
 
 // Parâmetros preservados da landing até o checkout
 export const TRACKED_PARAMS = [

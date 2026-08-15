@@ -1,19 +1,97 @@
-import { Suspense } from "react";
-import { headers, cookies } from "next/headers";
-import { QuizFlow } from "@/components/quiz/QuizFlow";
-import { normalizeVariant, AB_COOKIE } from "@/lib/ab";
+import type { Metadata } from "next";
+import { PageTracker } from "@/components/sales/PageTracker";
+import { StickyBar } from "@/components/sales/StickyBar";
+import { Header } from "@/components/sales/sections/Header";
+import { Hero } from "@/components/sales/sections/Hero";
+import { DuasMulheres } from "@/components/sales/sections/DuasMulheres";
+import { TresCoisas } from "@/components/sales/sections/TresCoisas";
+import { PontoDeFuga } from "@/components/sales/sections/PontoDeFuga";
+import { Posse } from "@/components/sales/sections/Posse";
+import { Metodo } from "@/components/sales/sections/Metodo";
+import { QuemCriou } from "@/components/sales/sections/QuemCriou";
+import { Prova } from "@/components/sales/sections/Prova";
+import { Oferta } from "@/components/sales/sections/Oferta";
+import { Garantia } from "@/components/sales/sections/Garantia";
+import { DoisCaminhos } from "@/components/sales/sections/DoisCaminhos";
+import { PostScriptum } from "@/components/sales/sections/PostScriptum";
+import { Rodape } from "@/components/sales/sections/Rodape";
 
-export default async function Page() {
-  // variante A/B: header injetado pelo proxy (request atual) → cookie → 'a'
-  const h = await headers();
-  const c = await cookies();
-  const variant = normalizeVariant(
-    h.get("x-pg-ab") ?? c.get(AB_COOKIE)?.value
-  );
+// ============================================================
+// ROTA / · PÁGINA DE VENDAS (long-form, texto puro, sem VSL) — R$ 97
+//
+// Assumiu a raiz em 14/08/2026; o funil de quiz mudou pra /quiz.
+//
+// RITMO DE FUNDO — a regra do handoff é "nunca 3 seções seguidas com o mesmo
+// fundo". O mapa abaixo é a fonte de verdade; se inserir seção nova, confira
+// aqui antes de escolher o tom.
+//
+//   01 Header ......... marfim
+//   02 Hero ........... marfim   (header + hero são um bloco só)
+//   03 Duas mulheres .. areia
+//   04 Três coisas .... ESCURO   (gravidade)
+//   05 Ponto de fuga .. marfim   (leitura longa respira no claro)
+//   06 Posse .......... VINHO    (seção-soco)
+//   07 Método ......... marfim
+//   08 Quem criou ..... areia
+//   09 Prova .......... ESCURO
+//   10 Oferta ......... marfim
+//   11 Garantia ....... areia
+//   12 Dois caminhos .. ESCURO
+//   13 P.S. ........... marfim
+//   14 Rodapé ......... tinta
+//
+// Tudo é Server Component: a página inteira é SSR e o texto chega pintado,
+// sem depender de JS. Só três coisas são client — o botão (Cta), a sticky bar
+// e o PageTracker. Foi o que custou ~78% de abandono na T1 do quiz quando o
+// conteúdo dependia de hidratação; aqui não se repete.
+//
+// ⚠️ Toda a copy vive em src/lib/sales-copy.ts. Nenhuma seção inventa texto.
+// ============================================================
 
+// A metadata do layout descreve o QUIZ ("autoavaliação, resultado em 2
+// minutos") — herdar isso aqui seria descrever errado o que a pessoa vai ler.
+// Mesmo registro clínico deliberado do resto do app: estas tags são o primeiro
+// texto que o rastreador da Meta lê. Não "melhorar" com copy de venda.
+// O que não está aqui (verification, robots, metadataBase) é herdado do layout.
+const TITULO = "Método de reconexão com o desejo — Andreia Fiamoncini, psicóloga";
+const DESCRICAO =
+  "Programa desenvolvido por uma psicóloga e sexóloga para mulheres que perderam o interesse na vida íntima. Acesso imediato e garantia de 30 dias.";
+
+export const metadata: Metadata = {
+  title: TITULO,
+  description: DESCRICAO,
+  openGraph: {
+    title: TITULO,
+    description: DESCRICAO,
+    type: "website",
+    locale: "pt_BR",
+    url: "https://www.reconectasexualidade.com.br",
+  },
+};
+
+export default function Page() {
   return (
-    <Suspense fallback={<div className="min-h-dvh w-full bg-indigo" />}>
-      <QuizFlow variant={variant} />
-    </Suspense>
+    <>
+      <PageTracker />
+
+      <main>
+        <Header />
+        <Hero />
+        <DuasMulheres />
+        <TresCoisas />
+        <PontoDeFuga />
+        <Posse />
+        <Metodo />
+        <QuemCriou />
+        <Prova />
+        <Oferta />
+        <Garantia />
+        <DoisCaminhos />
+        <PostScriptum />
+      </main>
+
+      <Rodape />
+      <StickyBar />
+    </>
   );
 }

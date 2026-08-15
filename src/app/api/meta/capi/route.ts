@@ -10,15 +10,25 @@ import {
   userDataFromRequest,
   type CapiEvent,
 } from "@/lib/meta-capi";
-import { OFFER_CURRENCY, OFFER_VALUE } from "@/lib/config";
+import { FUNNEL_VALUE, OFFER_CURRENCY, type Funnel } from "@/lib/config";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-// Só aceitamos estes eventos (o endpoint é público — evita abuso)
-const ALLOWED = new Set(["QuizStep", "Lead", "InitiateCheckout"]);
+// Só aceitamos estes eventos (o endpoint é público — evita abuso).
+// ⚠️ "Purchase" fora de propósito: compra vem do webhook da Hotmart, nunca do
+// navegador, senão qualquer um forja conversão neste dataset.
+const ALLOWED = new Set(["QuizStep", "ViewContent", "Lead", "InitiateCheckout"]);
 // Eventos monetários: valor é autoritativo no servidor (ignora o que vier do cliente)
-const MONETARY = new Set(["Lead", "InitiateCheckout"]);
+const MONETARY = new Set(["ViewContent", "Lead", "InitiateCheckout"]);
+
+// O app serve dois funis com preços diferentes (quiz R$ 47, página de vendas
+// R$ 97). O cliente manda só o RÓTULO do funil; o preço sai desta tabela.
+// Assim o servidor continua sendo a autoridade sobre o valor — ninguém injeta
+// um número arbitrário no dataset — e mesmo assim cada funil reporta o seu.
+function funnelOf(v: unknown): Funnel {
+  return v === "vendas" ? "vendas" : "quiz";
+}
 
 export async function POST(req: NextRequest) {
   let payload: unknown;
@@ -28,13 +38,14 @@ export async function POST(req: NextRequest) {
     return Response.json({ ok: false, error: "json inválido" }, { status: 400 });
   }
 
-  const { event_name, event_id, event_source_url, custom_data, user_data } =
+  const { event_name, event_id, event_source_url, custom_data, user_data, funnel } =
     (payload ?? {}) as {
       event_name?: unknown;
       event_id?: unknown;
       event_source_url?: unknown;
       custom_data?: unknown;
       user_data?: unknown;
+      funnel?: unknown;
     };
 
   if (typeof event_name !== "string" || !ALLOWED.has(event_name)) {
@@ -69,7 +80,7 @@ export async function POST(req: NextRequest) {
       : {};
 
   if (MONETARY.has(event_name)) {
-    custom.value = OFFER_VALUE;
+    custom.value = FUNNEL_VALUE[funnelOf(funnel)];
     custom.currency = OFFER_CURRENCY;
   }
 

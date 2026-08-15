@@ -38,6 +38,11 @@ export function proxy(request: NextRequest) {
   return res;
 }
 
+// ⚠️ Era "/" até 14/08/2026, quando a página de vendas assumiu a raiz e o
+// quiz foi pra /quiz. O sorteio precisa acontecer no MESMO request que
+// renderiza a T1 — é o header x-pg-ab que evita o flash de hidratação —,
+// então o matcher tem que acompanhar a rota do quiz. Rodar na raiz agora só
+// gastaria cookie em quem nunca vai ver a headline testada.
 export const config = {
-  matcher: "/",
+  matcher: "/quiz",
 };

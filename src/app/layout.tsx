@@ -22,12 +22,18 @@ const jost = Jost({
 });
 
 // ⚠️ REGISTRO CLÍNICO PROPOSITAL — não "melhorar" com copy de venda.
-// O quiz renderiza no cliente, então o <body> servido é VAZIO: title,
-// description e Open Graph são o ÚNICO texto que o rastreador da Meta lê pra
-// classificar o domínio. Em 07/2026 o domínio foi marcado como "Conteúdo
-// inadequado", o que restringe compartilhamento de dados e entrega de anúncio.
-// Estas tags existem pra descrever o produto como saúde sexual, que é o que
-// ele é. A copy crua vive nas telas do funil (screens.ts) e continua intacta.
+// Em 07/2026 o domínio purogozo.com foi marcado pela Meta como "Conteúdo
+// inadequado", o que restringiu entrega e dados de otimização e obrigou a
+// migração pro domínio atual. Estas tags descrevem o produto como saúde
+// sexual, que é o que ele é.
+//
+// ⚠️⚠️ MUDOU EM 14/08/2026, E MUDOU PRA PIOR EM TERMOS DE EXPOSIÇÃO.
+// Antes, a raiz era o quiz e o <body> servido tinha só a T1 — title,
+// description e OG eram quase o único texto rastreável. Agora a raiz é a
+// PÁGINA DE VENDAS, que é SSR de texto puro: a copy crua inteira vai no HTML
+// e é lida por qualquer rastreador. Estas tags continuam valendo, mas já não
+// são a única superfície — hoje elas são a menor parte dela.
+// Ver a nota de risco no README antes de apontar campanha pra este domínio.
 export const metadata: Metadata = {
   title: "Avaliação de Saúde Sexual Feminina",
   description:
@@ -52,11 +58,14 @@ export const metadata: Metadata = {
   },
 };
 
+// ⚠️ SEM `maximumScale` aqui de propósito. Ele existia no app inteiro por
+// causa da dobra medida da T1, mas bloquear o zoom numa página de leitura
+// longa (a de vendas, na raiz) é barreira de acessibilidade. A restrição foi
+// movida pro `viewport` da própria rota /quiz, onde ela faz sentido.
 export const viewport: Viewport = {
   themeColor: "#363975",
   width: "device-width",
   initialScale: 1,
-  maximumScale: 1,
 };
 
 export default function RootLayout({

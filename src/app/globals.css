@@ -14,6 +14,11 @@
   --color-tinta: #1e1f3a;
   --color-nevoa: #b5b2c8;
 
+  /* Areia — terceiro fundo claro, quente. Nasceu com a página de vendas (/),
+     que alterna claro/escuro e não pode repetir o mesmo fundo 3 seções
+     seguidas. O quiz não usa. */
+  --color-areia: #f5eaec;
+
   /* Tipografia */
   --font-serif: var(--font-playfair), Georgia, serif;
   --font-sans: var(--font-jost), system-ui, sans-serif;
@@ -197,6 +202,68 @@ body {
   animation: reveal-up 0.55s var(--ease-diary) both;
 }
 
+/* ============================================================
+   PÁGINA DE VENDAS (rota /) — usado só pelas seções em
+   components/sales. Nada aqui altera o quiz.
+   ============================================================ */
+
+/* Prosa: leitura longa precisa de medida curta e entrelinha alta, ou
+   ninguém chega na seção de oferta. */
+.prosa p {
+  font-size: 1rem;
+  line-height: 1.78;
+  font-weight: 300;
+}
+.prosa p + p {
+  margin-top: 1.15em;
+}
+@media (min-width: 640px) {
+  .prosa p {
+    font-size: 1.06rem;
+    line-height: 1.8;
+  }
+}
+
+/* Fundo escuro "de gravidade" das seções pesadas. É o mesmo degradê do
+   .bg-breathe, sem a animação: numa página que rola 17 mil pixels, fundo
+   que respira vira distração. */
+.bg-profundo {
+  background: linear-gradient(
+    155deg,
+    var(--color-indigo) 0%,
+    #46306a 55%,
+    var(--color-vinho) 100%
+  );
+}
+
+/* Revelação no scroll — CSS puro, sem JS.
+   Decisão deliberada: o conteúdo já nasce VISÍVEL no HTML e a animação só
+   existe dentro do @supports. Navegador sem suporte simplesmente não anima,
+   nunca esconde. Foi conteúdo dependente de hidratação que custou ~78% de
+   abandono na T1 em navegador in-app. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal {
+      animation: reveal-up linear both;
+      animation-timeline: view();
+      animation-range: entry 2% cover 20%;
+    }
+  }
+}
+
+/* Entrada da sticky bar de oferta */
+@keyframes bar-in {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: none;
+  }
+}
+.bar-in {
+  animation: bar-in 0.35s var(--ease-diary) both;
+}
+
 /* Scrollbar discreta */
 ::-webkit-scrollbar {
   width: 8px;
@@ -215,7 +282,8 @@ body {
   .cta-pulse,
   .bob,
   .wave-anim,
-  .landing-reveal {
+  .landing-reveal,
+  .bar-in {
     animation: none !important;
   }
   .grain::after {

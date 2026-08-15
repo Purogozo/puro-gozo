@@ -5,76 +5,38 @@ import {
   CHECKOUT_URL,
   OFFER_CURRENCY,
   OFFER_VALUE,
-  TRACKED_PARAMS,
 } from "./config";
+import { captureParams, getParams, withParams } from "./params";
+import {
+  getExternalId,
+  getFbc,
+  getFbp,
+  getFbq,
+  getSessionId,
+  newEventId,
+  sendToCapi,
+} from "./meta-client";
 
-const STORE_KEY = "pg-params";
+// ============================================================
+// PURO GOZO · Tracking do QUIZ (rota /quiz)
+//
+// A página de vendas (rota /) tem o mapeamento dela em sales-tracking.ts.
+// A captura de UTMs (params.ts) e os sinais de correspondência do Meta
+// (meta-client.ts) são compartilhados pelos dois — o que está aqui é só o
+// vocabulário de eventos do quiz e a ingestão no Supabase.
+//
+// ⚠️ Só o quiz alimenta o endpoint de analytics (pg_events / pg_sessions).
+// A página de vendas NÃO manda evento pra lá de propósito: as views do
+// dashboard montam o funil agrupando por tela com lag(), e eventos de outra
+// origem quebrariam essa contagem.
+// ============================================================
 
-// utm_source nunca vazio. Precedência (padrão de mídia BR): utm_source da URL →
-// utm_source do referrer → hostname do referrer → "direto". Assim tráfego
-// orgânico/direto chega ao checkout com uma origem legível em vez de vazio.
-// Roda só na entrada da sessão (SPA de rota única); o guard "!existing" no
-// captureParams garante que não é sobrescrito depois.
-function resolveUtmSource(url: URLSearchParams): string {
-  const fromUrl = url.get("utm_source");
-  if (fromUrl) return fromUrl;
-  const ref = document.referrer;
-  if (ref) {
-    try {
-      const refUrl = new URL(ref);
-      return (
-        new URLSearchParams(refUrl.search).get("utm_source") || refUrl.hostname
-      );
-    } catch {
-      /* referrer malformado — ignora */
-    }
-  }
-  return "direto";
-}
-
-// Captura UTMs / click IDs da URL e persiste por sessão (hydration-safe:
-// chamado em useEffect, nunca durante o render)
-export function captureParams() {
-  if (typeof window === "undefined") return;
-  try {
-    const url = new URLSearchParams(window.location.search);
-    const existing = JSON.parse(sessionStorage.getItem(STORE_KEY) ?? "{}");
-    let changed = false;
-    for (const key of TRACKED_PARAMS) {
-      const v = url.get(key);
-      if (v && !existing[key]) {
-        existing[key] = v;
-        changed = true;
-      }
-    }
-    // Fallback de origem: se nada trouxe utm_source, deriva do referrer.
-    if (!existing["utm_source"]) {
-      existing["utm_source"] = resolveUtmSource(url);
-      changed = true;
-    }
-    if (changed) sessionStorage.setItem(STORE_KEY, JSON.stringify(existing));
-  } catch {
-    /* no-op */
-  }
-}
-
-export function getParams(): Record<string, string> {
-  if (typeof window === "undefined") return {};
-  try {
-    return JSON.parse(sessionStorage.getItem(STORE_KEY) ?? "{}");
-  } catch {
-    return {};
-  }
-}
+// Reexportados pra não obrigar os componentes do quiz a saber da divisão.
+export { captureParams, getParams, getExternalId, getSessionId };
 
 // Monta o checkout Hotmart preservando parâmetros (compra discreta)
 export function buildCheckoutUrl(meta?: Record<string, string>): string {
-  const params = { ...getParams(), ...meta };
-  const url = new URL(CHECKOUT_URL);
-  for (const [k, v] of Object.entries(params)) {
-    if (v) url.searchParams.set(k, v);
-  }
-  return url.toString();
+  return withParams(CHECKOUT_URL, meta);
 }
 
 type EventName =
@@ -83,72 +45,6 @@ type EventName =
   | "quiz_complete"
   | "cta_click"
   | "checkout_redirect";
-
-// fbq é injetado pelo script do Meta Pixel no layout (pode não existir em
-// dev/adblock — sempre checar antes de chamar). O 4º argumento (options)
-// carrega o eventID usado na desduplicação com a CAPI (server-side).
-type Fbq = (
-  method: "track" | "trackCustom",
-  event: string,
-  params?: Record<string, unknown>,
-  options?: { eventID?: string }
-) => void;
-
-declare global {
-  interface Window {
-    fbq?: Fbq;
-  }
-}
-
-const CAPI_ENDPOINT = "/api/meta/capi";
-
-// id único por evento; compartilhado entre Pixel e CAPI p/ o Meta desduplicar
-function newEventId(): string {
-  try {
-    if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
-  } catch {
-    /* fallback abaixo */
-  }
-  return `${Date.now()}-${Math.floor(Math.random() * 1e9)}`;
-}
-
-const EID_KEY = "pg-eid";
-const FBC_KEY = "pg-fbc";
-const FBP_KEY = "pg-fbp";
-const SID_KEY = "pg-sid";
-
-// ID anônimo estável por visitante (localStorage). Melhora a correspondência
-// sem coletar nenhum dado pessoal — vai hasheado no servidor.
-// Também serve de visitor_id no dashboard: liga várias sessões da mesma pessoa.
-export function getExternalId(): string | undefined {
-  try {
-    let eid = localStorage.getItem(EID_KEY);
-    if (!eid) {
-      eid = newEventId();
-      localStorage.setItem(EID_KEY, eid);
-    }
-    return eid;
-  } catch {
-    return undefined;
-  }
-}
-
-// ID de uma EXECUÇÃO do quiz (sessionStorage). Distinto do visitor_id: o store
-// do quiz persiste em localStorage, então quem volta dias depois é o mesmo
-// visitante numa sessão nova. É o session_id que dá sentido ao funil — sem ele
-// dá pra contar views por tela, mas não "de 100 que entraram, X chegaram na T19".
-export function getSessionId(): string | undefined {
-  try {
-    let sid = sessionStorage.getItem(SID_KEY);
-    if (!sid) {
-      sid = newEventId();
-      sessionStorage.setItem(SID_KEY, sid);
-    }
-    return sid;
-  } catch {
-    return undefined;
-  }
-}
 
 // Navegação por ?screen=N é preview interno (nós testando), não visita real.
 // Marcado na origem pra não sujar o funil — as views filtram is_preview.
@@ -160,102 +56,12 @@ function isPreview(): boolean {
   }
 }
 
-function readCookie(name: string): string | undefined {
-  try {
-    const m = document.cookie.match(new RegExp("(?:^|; )" + name + "=([^;]*)"));
-    return m ? decodeURIComponent(m[1]) : undefined;
-  } catch {
-    return undefined;
-  }
-}
-
-// fbc (ID do clique do anúncio): usa o cookie _fbc; se não existir, constrói a
-// partir do fbclid capturado (formato exigido: fb.1.<ts>.<fbclid>) e memoiza.
-function getFbc(): string | undefined {
-  const cookie = readCookie("_fbc");
-  if (cookie) return cookie;
-  try {
-    const stored = sessionStorage.getItem(FBC_KEY);
-    if (stored) return stored;
-    const fbclid = getParams()["fbclid"];
-    if (!fbclid) return undefined;
-    const fbc = `fb.1.${Date.now()}.${fbclid}`;
-    sessionStorage.setItem(FBC_KEY, fbc);
-    return fbc;
-  } catch {
-    return undefined;
-  }
-}
-
-// fbp (ID do navegador, _fbp): o Pixel cria esse cookie, mas em navegador in-app
-// (Instagram/Facebook) ele frequentemente NÃO existe — medido em ~68% das
-// sessões sem fbp. Sem ele, o Purchase do webhook (reidratado de pg_sessions)
-// e os eventos da CAPI saem sem um dos sinais de maior peso na correspondência.
-//
-// Estratégia (a mesma que a Meta recomenda e que já usamos pro fbc): se o cookie
-// existir, usa ele (mantém a paridade com o Pixel); senão gera no formato oficial
-// fb.1.<ts>.<rand>, persiste em localStorage (estável por navegador, como o
-// cookie de 90 dias da Meta e como o pg-eid) e, best-effort, grava o cookie _fbp
-// pra que o Pixel adote o MESMO valor. Assim CAPI, Supabase e Pixel convergem.
-function getFbp(): string | undefined {
-  const cookie = readCookie("_fbp");
-  if (cookie) return cookie;
-  try {
-    const stored = localStorage.getItem(FBP_KEY);
-    if (stored) return stored;
-    const rand = Math.floor(1e10 + Math.random() * 9e10); // ~11 dígitos
-    const fbp = `fb.1.${Date.now()}.${rand}`;
-    localStorage.setItem(FBP_KEY, fbp);
-    try {
-      // host-only, 90 dias (mesma validade do _fbp da Meta). Se o Pixel rodar,
-      // ele reusa um _fbp existente em vez de criar outro → valores batem.
-      document.cookie = `_fbp=${fbp}; max-age=${90 * 24 * 60 * 60}; path=/; samesite=Lax`;
-    } catch {
-      /* cookie bloqueado: seguimos com o valor em localStorage */
-    }
-    return fbp;
-  } catch {
-    return undefined;
-  }
-}
-
-// Envia o evento pra CAPI (servidor) com o mesmo event_id do Pixel + os sinais
-// de correspondência que o servidor sozinho não tem (external_id, fbp, fbc).
-// keepalive: sobrevive ao redirect do checkout (InitiateCheckout).
-function sendToCapi(
-  eventName: string,
-  eventId: string,
-  customData: Record<string, unknown>
-) {
-  try {
-    const userData = {
-      external_id: getExternalId(),
-      fbp: getFbp(),
-      fbc: getFbc(),
-    };
-    fetch(CAPI_ENDPOINT, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        event_name: eventName,
-        event_id: eventId,
-        event_source_url: window.location.href,
-        custom_data: customData,
-        user_data: userData,
-      }),
-      keepalive: true,
-    }).catch(() => {});
-  } catch {
-    /* no-op */
-  }
-}
-
 // Mapeia os eventos internos do funil → Meta.
 // Pixel (navegador) + CAPI (servidor) com event_id compartilhado.
 // Padrão (Lead / InitiateCheckout) onde o Meta otimiza; custom no funil.
 function trackPixel(name: EventName, payload: Record<string, unknown>) {
   if (typeof window === "undefined") return;
-  const fbq = typeof window.fbq === "function" ? window.fbq : undefined;
+  const fbq = getFbq();
   const eventId = newEventId();
 
   switch (name) {
@@ -267,7 +73,7 @@ function trackPixel(name: EventName, payload: Record<string, unknown>) {
         variant: payload.variant,
       };
       fbq?.("trackCustom", "QuizStep", custom, { eventID: eventId });
-      sendToCapi("QuizStep", eventId, custom);
+      sendToCapi("QuizStep", eventId, custom, "quiz");
       break;
     }
     case "option_select":
@@ -282,7 +88,7 @@ function trackPixel(name: EventName, payload: Record<string, unknown>) {
         currency: OFFER_CURRENCY,
       };
       fbq?.("track", "Lead", custom, { eventID: eventId });
-      sendToCapi("Lead", eventId, custom);
+      sendToCapi("Lead", eventId, custom, "quiz");
       break;
     }
     case "checkout_redirect": {
@@ -295,7 +101,7 @@ function trackPixel(name: EventName, payload: Record<string, unknown>) {
         currency: OFFER_CURRENCY,
       };
       fbq?.("track", "InitiateCheckout", custom, { eventID: eventId });
-      sendToCapi("InitiateCheckout", eventId, custom);
+      sendToCapi("InitiateCheckout", eventId, custom, "quiz");
       break;
     }
     // cta_click dispara junto com checkout_redirect no mesmo clique —
