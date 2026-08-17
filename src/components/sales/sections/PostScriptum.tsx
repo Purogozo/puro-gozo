@@ -21,7 +21,7 @@ export function PostScriptum() {
       </div>
 
       <div className="mt-10 flex justify-center">
-        <Cta position="ps" pulse>
+        <Cta position="ps" to="checkout" pulse>
           {c.cta}
         </Cta>
       </div>

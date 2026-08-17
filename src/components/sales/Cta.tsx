@@ -9,11 +9,20 @@ import { buildCheckoutUrl, trackEvent } from "@/lib/sales-tracking";
 // clicável aos olhos de quem só passa o olho.
 //
 // É um <a>, não um <button>: sem JS (ou antes de hidratar) o clique já leva ao
-// checkout. Com JS, o onClick assume pra anexar as UTMs e disparar o
-// InitiateCheckout antes de navegar.
+// destino. Com JS, o onClick assume pra anexar as UTMs e medir antes de navegar.
+//
+// ⚠️ REGRA DE DESTINO (`to`), definida pelo cliente em 17/08/2026 — depende de
+// ONDE o botão está na página, não do que ele diz:
+//
+//   ACIMA da seção de oferta  → to="oferta"   (âncora #oferta, rolagem interna)
+//   Da OFERTA pra baixo       → to="checkout" (Hotmart, direto)
+//
+// Por isso a prop é obrigatória: seção nova precisa decidir de que lado da
+// oferta ela está. Ver o mapa de seções no topo de src/app/page.tsx.
 export function Cta({
   children,
   position,
+  to,
   full = true,
   pulse = false,
   className = "",
@@ -21,17 +30,38 @@ export function Cta({
   children: React.ReactNode;
   /** de qual seção partiu o clique — vai como cta_position no Pixel */
   position: string;
+  /** "oferta" = rola até #oferta · "checkout" = vai pro Hotmart */
+  to: "oferta" | "checkout";
   full?: boolean;
   pulse?: boolean;
   className?: string;
 }) {
   // Fallback do SSR: sem link de checkout configurado, o botão ao menos leva
   // até a oferta em vez de virar um clique morto.
-  const href = SALES_CHECKOUT_URL || "#oferta";
+  const href = to === "oferta" ? "#oferta" : SALES_CHECKOUT_URL || "#oferta";
 
   function handleClick(e: MouseEvent<HTMLAnchorElement>) {
     // deixa o navegador cuidar de abrir em nova aba / nova janela
     if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+
+    if (to === "oferta") {
+      // Custom, NÃO InitiateCheckout: quem clica aqui não foi pro checkout, e
+      // sujar o InitiateCheckout (evento que o Meta otimiza) com rolagem
+      // interna estragaria a otimização. O cta_position continua vindo, então
+      // ainda dá pra ranquear qual seção empurra pra oferta.
+      trackEvent("oferta_click", { cta_position: position });
+
+      // Nada de e.preventDefault(): o salto nativo do href="#oferta" é o que
+      // leva até a seção. Só medimos e saímos da frente.
+      //
+      // Tentamos rolagem suave por JS e ela foi descartada: a oferta fica a
+      // ~8.500px do herói, e animar essa distância acionando em cadeia todas
+      // as revelações de scroll da página chegou a travar o renderizador no
+      // Chrome (o scrollIntoView suave nem sai do lugar aqui). O pulo do
+      // navegador é instantâneo, funciona sem JS e antes da hidratação — a
+      // mesma regra do resto da página.
+      return;
+    }
 
     trackEvent("checkout_click", { cta_position: position });
 

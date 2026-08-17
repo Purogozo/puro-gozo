@@ -21,7 +21,11 @@ export function buildCheckoutUrl(meta?: Record<string, string>): string {
   return withParams(SALES_CHECKOUT_URL, meta);
 }
 
-type EventName = "page_view" | "scroll_depth" | "checkout_click";
+type EventName =
+  | "page_view"
+  | "scroll_depth"
+  | "oferta_click"
+  | "checkout_click";
 
 // Mapeia os eventos da página → Meta.
 // Padrão (ViewContent / InitiateCheckout) onde o Meta otimiza; custom no resto.
@@ -54,6 +58,15 @@ export function trackEvent(
       // valor zero pra otimização: só Pixel, não vai pra CAPI.
       fbq?.("trackCustom", "ScrollDepth", { depth: payload.depth });
       break;
+    case "oferta_click":
+      // CTAs ACIMA da oferta rolam até a seção em vez de ir pro checkout.
+      // Não é InitiateCheckout — ninguém saiu da página. Fica como custom só
+      // no Pixel (sem CAPI, como o scroll_depth): serve pra ranquear qual
+      // seção empurra pra oferta, não pra otimização.
+      fbq?.("trackCustom", "ClickToOffer", {
+        cta_position: payload.cta_position,
+      });
+      break;
     case "checkout_click": {
       const custom = {
         content_name: "Puro Gozo",
@@ -62,8 +75,10 @@ export function trackEvent(
         num_items: 1,
         value: SALES_OFFER_VALUE,
         currency: OFFER_CURRENCY,
-        // qual CTA da página levou ao checkout (são 8) — some no Pixel como
-        // parâmetro custom e permite ranquear as seções que convertem.
+        // qual CTA da página levou ao checkout — some no Pixel como parâmetro
+        // custom e permite ranquear as seções que convertem. Desde 17/08/2026
+        // só os botões da oferta pra baixo chegam aqui (oferta, dois-caminhos,
+        // ps e a sticky depois da oferta); os de cima viram ClickToOffer.
         cta_position: payload.cta_position,
       };
       fbq?.("track", "InitiateCheckout", custom, { eventID: eventId });

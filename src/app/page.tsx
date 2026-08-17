@@ -25,20 +25,29 @@ import { Rodape } from "@/components/sales/sections/Rodape";
 // fundo". O mapa abaixo é a fonte de verdade; se inserir seção nova, confira
 // aqui antes de escolher o tom.
 //
-//   01 Header ......... marfim
-//   02 Hero ........... marfim   (header + hero são um bloco só)
-//   03 Duas mulheres .. areia
-//   04 Três coisas .... ESCURO   (gravidade)
-//   05 Ponto de fuga .. marfim   (leitura longa respira no claro)
-//   06 Posse .......... VINHO    (seção-soco)
-//   07 Método ......... marfim
-//   08 Quem criou ..... areia
-//   09 Prova .......... ESCURO
-//   10 Oferta ......... marfim
-//   11 Garantia ....... areia
-//   12 Dois caminhos .. ESCURO
-//   13 P.S. ........... marfim
-//   14 Rodapé ......... tinta
+// DESTINO DOS BOTÕES — a segunda coluna. Regra do cliente (17/08/2026): os
+// CTAs acima da oferta são âncora pra #oferta; da oferta pra baixo vão direto
+// pro checkout. A prop `to` do <Cta> é obrigatória justamente pra que seção
+// nova não herde o destino errado.
+//
+//                        fundo     botão
+//   01 Header ......... marfim     —
+//   02 Hero ........... marfim     → #oferta   (header + hero são um bloco só)
+//   03 Duas mulheres .. areia      → #oferta
+//   04 Três coisas .... ESCURO     —           (gravidade)
+//   05 Ponto de fuga .. marfim     —           (leitura longa respira no claro)
+//   06 Posse .......... VINHO      → #oferta   (seção-soco)
+//   07 Método ......... marfim     → #oferta
+//   08 Quem criou ..... areia      → #oferta
+//   09 Prova .......... ESCURO     → #oferta
+//   10 Oferta ......... marfim     → CHECKOUT  ← daqui pra baixo é checkout
+//   11 Garantia ....... areia      —
+//   12 Dois caminhos .. ESCURO     → CHECKOUT
+//   13 P.S. ........... marfim     → CHECKOUT
+//   14 Rodapé ......... tinta      —
+//
+// A sticky bar é a exceção: ela acompanha a rolagem, então decide o destino em
+// tempo real pela mesma regra (ver StickyBar.tsx).
 //
 // Tudo é Server Component: a página inteira é SSR e o texto chega pintado,
 // sem depender de JS. Só três coisas são client — o botão (Cta), a sticky bar

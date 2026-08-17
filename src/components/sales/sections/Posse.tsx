@@ -22,7 +22,7 @@ export function Posse() {
       </div>
 
       <div className="mt-11 flex justify-center sm:mt-14">
-        <Cta position="posse" pulse>
+        <Cta position="posse" to="oferta" pulse>
           {c.cta}
         </Cta>
       </div>

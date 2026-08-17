@@ -91,7 +91,7 @@ export function Metodo() {
           </p>
 
           <div className="mt-10">
-            <Cta position="metodo">{c.cta}</Cta>
+            <Cta position="metodo" to="oferta">{c.cta}</Cta>
           </div>
         </div>
       </div>

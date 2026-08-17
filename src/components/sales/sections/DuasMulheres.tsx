@@ -52,7 +52,7 @@ export function DuasMulheres() {
       </div>
 
       <div className="mt-10 flex justify-center sm:mt-12">
-        <Cta position="duas-mulheres">{c.cta}</Cta>
+        <Cta position="duas-mulheres" to="oferta">{c.cta}</Cta>
       </div>
     </Section>
   );

@@ -54,7 +54,7 @@ export function Prova() {
       </p>
 
       <div className="mt-10 flex justify-center sm:mt-12">
-        <Cta position="prova">{c.cta}</Cta>
+        <Cta position="prova" to="oferta">{c.cta}</Cta>
       </div>
     </Section>
   );

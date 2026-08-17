@@ -42,7 +42,7 @@ export function Hero() {
           </p>
 
           <div className="mt-4 w-full">
-            <Cta position="hero" pulse>
+            <Cta position="hero" to="oferta" pulse>
               {hero.cta}
             </Cta>
           </div>

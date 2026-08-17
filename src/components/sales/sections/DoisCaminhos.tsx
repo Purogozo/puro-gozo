@@ -48,7 +48,7 @@ export function DoisCaminhos() {
       </p>
 
       <div className="mt-10 flex justify-center">
-        <Cta position="dois-caminhos" pulse>
+        <Cta position="dois-caminhos" to="checkout" pulse>
           {c.cta}
         </Cta>
       </div>

@@ -81,7 +81,7 @@ export function Oferta() {
           </p>
 
           <div className="mt-8 flex justify-center">
-            <Cta position="oferta" pulse>
+            <Cta position="oferta" to="checkout" pulse>
               {c.cta}
             </Cta>
           </div>

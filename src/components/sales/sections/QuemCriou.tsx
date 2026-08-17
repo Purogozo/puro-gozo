@@ -82,7 +82,7 @@ export function QuemCriou() {
           </dl>
 
           <div className="mt-11">
-            <Cta position="quem-criou">{c.cta}</Cta>
+            <Cta position="quem-criou" to="oferta">{c.cta}</Cta>
           </div>
         </div>
       </div>
