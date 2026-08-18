@@ -18,7 +18,7 @@ export const CHECKOUT_URL =
 // Checkout da PÁGINA DE VENDAS — oferta de R$ 97
 export const SALES_CHECKOUT_URL =
   process.env.NEXT_PUBLIC_SALES_CHECKOUT_URL ??
-  "https://pay.hotmart.com/R106650092U?off=jqxrq4se";
+  "https://pay.hotmart.com/R106650092U?off=jqxrq4se&checkoutMode=10";
 
 // Endpoint de analytics (screen_view, option_select, etc.) → Supabase.
 // Default aponta pra rota interna: em produção funciona sem env nenhuma.

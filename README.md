@@ -2,7 +2,7 @@
 
 | Rota | O que é | Preço | Checkout |
 | --- | --- | --- | --- |
-| `/` | **Página de vendas** long-form, 14 seções, texto puro | R$ 97 | `R106650092U?off=jqxrq4se` |
+| `/` | **Página de vendas** long-form, 14 seções, texto puro | R$ 97 | `R106650092U?off=jqxrq4se&checkoutMode=10` |
 | `/quiz` | **Funil de quiz** de 20 telas | R$ 47 | `R106650092U` |
 
 ⚠️ **Mudou em 14/08/2026.** O quiz ficava na raiz; a página de vendas assumiu o
