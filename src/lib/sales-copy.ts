@@ -251,6 +251,20 @@ export const COPY = {
     precoRotulo: "Hoje, tudo isso por",
     preco: "R$ 47",
     parcelado: "ou em até 12x de R$ 4,86 no cartão",
+    // Painel de progresso abaixo do preço. ⚠️ NÚMERO DECLARADO PELO CLIENTE,
+    // atualizado à mão: não há contador ao vivo aqui e nada checa o valor real
+    // de alunas. Se ele congelar em 947 por semanas, vira prova falsa —
+    // atualizar junto com a matrícula ou remover o painel.
+    // Só os dois NÚMEROS moram aqui: "faltam X" e "947 de 1.000" são montados
+    // no componente, pra que mexer no `atual` nunca deixe a frase incoerente.
+    alunas: {
+      atual: 947,
+      meta: 1000,
+      // O preço do reajuste NÃO é escrito aqui: o componente reusa `ancora`
+      // logo acima, senão os dois números podem divergir numa edição futura.
+      chamada: "vagas · O valor será reajustado para",
+      rodape: "mulheres já fazem parte · desconto disponível até as vagas se esgotarem",
+    },
     cta: "Quero acesso ao Puro Gozo — R$ 47",
     micro: "Acesso imediato após o pagamento · Garantia de 30 dias · Ninguém precisa saber",
   },

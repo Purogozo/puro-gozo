@@ -80,6 +80,43 @@ export function Oferta() {
             {c.parcelado}
           </p>
 
+          {/* ── painel de progresso (947 → 1.000) ──
+              Painel VINHO cheio, não caixa clara: ele fica entre o preço e o
+              CTA, e a versão discreta anterior sumia contra o fundo areia.
+              O acento é ROSE-SUAVE, não o rosé do botão — a cor de ação
+              continua exclusiva do CTA, que está logo abaixo.
+              A barra enche ao entrar na tela (CSS puro, `.medidor-fill`);
+              sem suporte a animation-timeline ela já nasce cheia. */}
+          <div className="mt-6 overflow-hidden rounded-[1.1rem] bg-vinho px-5 py-4 text-left shadow-[0_18px_42px_-26px_rgba(110,51,80,0.85)] sm:px-6 sm:py-[1.15rem]">
+            <p className="font-serif font-semibold leading-none text-marfim">
+              <span className="text-[1.6rem] sm:text-[1.85rem]">
+                Faltam {c.alunas.meta - c.alunas.atual}
+              </span>{" "}
+              <span className="text-[0.95rem] sm:text-[1.05rem]">
+                {c.alunas.chamada} {c.ancora}
+              </span>
+            </p>
+
+            <div
+              aria-hidden
+              className="mt-3 h-2 w-full overflow-hidden rounded-full bg-marfim/15"
+            >
+              <div
+                className="medidor-fill h-full rounded-full bg-rose-suave"
+                style={{
+                  width: `${Math.min(100, Math.round((c.alunas.atual / c.alunas.meta) * 1000) / 10)}%`,
+                }}
+              />
+            </div>
+
+            <p className="mt-2.5 font-sans text-[0.74rem] font-light leading-snug text-marfim/70">
+              <span className="font-medium text-rose-suave">
+                {c.alunas.atual} de {c.alunas.meta.toLocaleString("pt-BR")}
+              </span>{" "}
+              {c.alunas.rodape}
+            </p>
+          </div>
+
           <div className="mt-8 flex justify-center">
             <Cta position="oferta" to="checkout" pulse>
               {c.cta}

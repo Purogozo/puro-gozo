@@ -251,6 +251,32 @@ body {
   }
 }
 
+/* Medidor da oferta (947 → 1.000), na seção de preço.
+   Enche quando entra na tela, pela mesma mecânica de `.reveal`: timeline de
+   scroll em CSS puro, sem JS e sem depender de hidratação. Navegador sem
+   `animation-timeline` (e quem pediu menos movimento) vê a barra já cheia —
+   nenhum caminho leva a uma barra vazia. */
+@keyframes medidor-fill {
+  from {
+    transform: scaleX(0.03);
+  }
+  to {
+    transform: none;
+  }
+}
+.medidor-fill {
+  transform-origin: left center;
+}
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .medidor-fill {
+      animation: medidor-fill 1s var(--ease-diary) both;
+      animation-timeline: view();
+      animation-range: entry 15% cover 30%;
+    }
+  }
+}
+
 /* Entrada da sticky bar de oferta */
 @keyframes bar-in {
   from {
