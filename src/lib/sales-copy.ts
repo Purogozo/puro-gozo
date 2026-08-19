@@ -17,7 +17,7 @@ export const COPY = {
   hero: {
     h1: "Existe uma forma de voltar a sentir tesão e a gozar de verdade — mesmo que faça anos, mesmo que você ache que já perdeu.",
     sub: "O que trava o desejo da maioria das mulheres é um hábito mental que ninguém te ensinou a enxergar. Desfaz esse hábito e a vontade, o prazer e o orgasmo voltam, no seu tempo, no seu corpo.",
-    micro: "Comece agora por R$ 97 · Garantia de 30 dias",
+    micro: "Comece agora por R$ 47 · Garantia de 30 dias",
     cta: "Quero voltar a sentir",
     credencial: {
       nome: "Andreia Fiamoncini",
@@ -247,11 +247,11 @@ export const COPY = {
       "Garantia integral de 30 dias",
     ],
     ancoraRotulo: "Valor total",
-    ancora: "R$ 697",
+    ancora: "R$ 297",
     precoRotulo: "Hoje, tudo isso por",
-    preco: "R$ 97",
-    parcelado: "ou em até 12x de R$ 10 no cartão",
-    cta: "Quero acesso ao Puro Gozo — R$ 97",
+    preco: "R$ 47",
+    parcelado: "ou em até 12x de R$ 4,86 no cartão",
+    cta: "Quero acesso ao Puro Gozo — R$ 47",
     micro: "Acesso imediato após o pagamento · Garantia de 30 dias · Ninguém precisa saber",
   },
 
@@ -284,7 +284,7 @@ export const COPY = {
     ],
     fecho:
       "Os dois caminhos partem do mesmo corpo. O que muda é você parar de deixar isso passar em silêncio.",
-    cta: "Quero começar hoje — R$ 97",
+    cta: "Quero começar hoje — R$ 47",
     micro:
       "Você vai pra uma página de pagamento segura, coloca seus dados, e o acesso é liberado na hora. Ninguém precisa saber. · Garantia de 30 dias.",
   },
@@ -293,9 +293,9 @@ export const COPY = {
   ps: {
     rotulo: "P.S.",
     texto:
-      "Você chegou até o fim dessa página porque isso importa de verdade pra você. Você sabe que o desejo já foi seu um dia, e sabe que não quer atravessar os próximos anos sem ele. Por R$ 97, menos que um jantar num restaurante e menos que uma única sessão de terapia, você começa hoje a reconstruir a forma como você vive dentro do próprio corpo. No seu tempo, na sua tela, com garantia de 30 dias.",
+      "Você chegou até o fim dessa página porque isso importa de verdade pra você. Você sabe que o desejo já foi seu um dia, e sabe que não quer atravessar os próximos anos sem ele. Por R$ 47, menos que um jantar num restaurante e menos que uma única sessão de terapia, você começa hoje a reconstruir a forma como você vive dentro do próprio corpo. No seu tempo, na sua tela, com garantia de 30 dias.",
     fecho: "Você não chegou até aqui à toa.",
-    cta: "Garantir meu acesso — R$ 97",
+    cta: "Garantir meu acesso — R$ 47",
   },
 
   // ── SEÇÃO 14 · RODAPÉ ─────────────────────────────────────
@@ -315,8 +315,8 @@ export const COPY = {
   // ── STICKY BAR (aparece após 350px de scroll) ─────────────
   sticky: {
     label: "Método Puro Gozo",
-    preco: "R$ 97",
-    de: "R$ 697",
+    preco: "R$ 47",
+    de: "R$ 297",
     cta: "Quero começar",
   },
 } as const;

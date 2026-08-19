@@ -2,7 +2,7 @@
 
 | Rota | O que é | Preço | Checkout |
 | --- | --- | --- | --- |
-| `/` | **Página de vendas** long-form, 14 seções, texto puro | R$ 97 | `R106650092U?off=jqxrq4se&checkoutMode=10` |
+| `/` | **Página de vendas** long-form, 14 seções, texto puro | R$ 47 | `R106650092U?off=71azdo8z&checkoutMode=10` |
 | `/quiz` | **Funil de quiz** de 20 telas | R$ 47 | `R106650092U` |
 
 ⚠️ **Mudou em 14/08/2026.** O quiz ficava na raiz; a página de vendas assumiu o
@@ -11,10 +11,13 @@ apontar pra `/quiz`** — senão o tráfego do quiz cai na página de vendas e o
 funil morre em silêncio. Isso vale também para `?screen=N` e `?reset=1`, que
 agora são `/quiz?screen=N` e `/quiz?reset=1`.
 
-⚠️ **Mesmo produto na Hotmart, ofertas diferentes.** O que separa R$ 97 de
-R$ 47 é o parâmetro `off`. `withParams` (`src/lib/params.ts`) anexa as UTMs com
-`searchParams.set`, que preserva a query da base — não trocar por concatenação
-de string, ou a pessoa lê um preço e paga outro.
+⚠️ **Mesmo produto na Hotmart, ofertas diferentes.** Em 19/08/2026 a página
+de vendas caiu de R$ 97 (`off=jqxrq4se`) para **R$ 47** (`off=71azdo8z`), com a
+âncora indo de R$ 697 para R$ 297. Preço igual ao do quiz **não** quer dizer
+oferta igual: são duas ofertas Hotmart distintas do mesmo produto, e o `off` é
+o que decide em qual a venda cai. `withParams` (`src/lib/params.ts`) anexa as
+UTMs com `searchParams.set`, que preserva a query da base — não trocar por
+concatenação de string, ou a venda entra na oferta errada.
 
 ⚠️ **A exposição do domínio à análise da Meta aumentou.** Até agora a raiz era
 o quiz, cujo HTML servido tinha só a T1. Agora a raiz é uma página SSR de texto

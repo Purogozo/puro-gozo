@@ -147,7 +147,7 @@ export function getFbp(): string | undefined {
 
 // Qual funil originou o evento. O servidor usa isso pra decidir o VALOR
 // monetário autoritativo — o mesmo produto tem duas ofertas (quiz R$ 47,
-// página de vendas R$ 97) e mandar o valor errado envenena a otimização.
+// página de vendas) e mandar o valor errado envenena a otimização.
 // É um rótulo fechado, não um número: o cliente não consegue forjar preço.
 export type Funnel = "quiz" | "vendas";
 

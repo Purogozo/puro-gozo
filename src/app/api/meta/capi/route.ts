@@ -22,8 +22,9 @@ const ALLOWED = new Set(["QuizStep", "ViewContent", "Lead", "InitiateCheckout"])
 // Eventos monetários: valor é autoritativo no servidor (ignora o que vier do cliente)
 const MONETARY = new Set(["ViewContent", "Lead", "InitiateCheckout"]);
 
-// O app serve dois funis com preços diferentes (quiz R$ 47, página de vendas
-// R$ 97). O cliente manda só o RÓTULO do funil; o preço sai desta tabela.
+// O app serve dois funis (quiz em /quiz, página de vendas em /). O cliente
+// manda só o RÓTULO do funil; o preço sai desta tabela — hoje os dois valem
+// R$ 47, mas cada funil continua tendo o seu valor próprio aqui.
 // Assim o servidor continua sendo a autoridade sobre o valor — ninguém injeta
 // um número arbitrário no dataset — e mesmo assim cada funil reporta o seu.
 function funnelOf(v: unknown): Funnel {

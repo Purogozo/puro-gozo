@@ -15,8 +15,9 @@ import { getFbq, newEventId, sendToCapi } from "./meta-client";
 export { captureParams };
 
 // Monta o checkout preservando UTMs/click IDs.
-// ⚠️ A base traz `?off=` — é o parâmetro que separa a oferta de R$ 97 da de
-// R$ 47 do quiz. `withParams` usa searchParams.set, que o preserva.
+// ⚠️ A base traz `?off=` — é o parâmetro que separa esta oferta da do quiz
+// (mesmo produto Hotmart, e desde 19/08/2026 mesmo preço, ofertas distintas).
+// `withParams` usa searchParams.set, que o preserva.
 export function buildCheckoutUrl(meta?: Record<string, string>): string {
   return withParams(SALES_CHECKOUT_URL, meta);
 }
@@ -44,7 +45,7 @@ export function trackEvent(
       // também pela CAPI (o PageView do Pixel não vai).
       const custom = {
         content_name: "Página de vendas Puro Gozo",
-        content_ids: ["puro-gozo-97"],
+        content_ids: ["puro-gozo-vendas"],
         content_type: "product",
         value: SALES_OFFER_VALUE,
         currency: OFFER_CURRENCY,
@@ -70,7 +71,7 @@ export function trackEvent(
     case "checkout_click": {
       const custom = {
         content_name: "Puro Gozo",
-        content_ids: ["puro-gozo-97"],
+        content_ids: ["puro-gozo-vendas"],
         content_type: "product",
         num_items: 1,
         value: SALES_OFFER_VALUE,

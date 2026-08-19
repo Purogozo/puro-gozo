@@ -4,10 +4,12 @@
 // ============================================================
 
 // ⚠️ DUAS OFERTAS, UM PRODUTO SÓ.
-// O app serve dois funis: o quiz em /quiz (R$ 47) e a página de vendas em /
-// (R$ 97). Os dois vendem o MESMO produto na Hotmart (R106650092U) — o que
-// separa as ofertas é o parâmetro `off` na URL de checkout. Se ele se perder,
-// a pessoa lê um preço na página e paga outro no checkout.
+// O app serve dois funis: o quiz em /quiz e a página de vendas em /. Desde
+// 19/08/2026 os DOIS anunciam R$ 47, mas continuam sendo ofertas Hotmart
+// SEPARADAS do MESMO produto (R106650092U) — o que as separa é o parâmetro
+// `off` na URL de checkout, e é ele que diz em qual oferta a venda cai.
+// Preço igual nas duas páginas não torna o `off` opcional: se ele se perder,
+// a venda entra na oferta errada (e o valor pode nem ser o anunciado).
 // `withParams` (params.ts) anexa as UTMs com searchParams.set, que preserva
 // a query da base. Não trocar por concatenação de string.
 
@@ -15,10 +17,12 @@
 export const CHECKOUT_URL =
   process.env.NEXT_PUBLIC_CHECKOUT_URL ?? "https://pay.hotmart.com/R106650092U";
 
-// Checkout da PÁGINA DE VENDAS — oferta de R$ 97
+// Checkout da PÁGINA DE VENDAS — oferta de R$ 47 (era R$ 97 até 19/08/2026,
+// com off=jqxrq4se; o off abaixo é o da oferta nova de R$ 47 desta página, que
+// NÃO é o mesmo da oferta do quiz)
 export const SALES_CHECKOUT_URL =
   process.env.NEXT_PUBLIC_SALES_CHECKOUT_URL ??
-  "https://pay.hotmart.com/R106650092U?off=jqxrq4se&checkoutMode=10";
+  "https://pay.hotmart.com/R106650092U?off=71azdo8z&checkoutMode=10";
 
 // Endpoint de analytics (screen_view, option_select, etc.) → Supabase.
 // Default aponta pra rota interna: em produção funciona sem env nenhuma.
@@ -34,7 +38,7 @@ export const META_PIXEL_ID =
 // O servidor é a autoridade sobre esses números (ver api/meta/capi/route.ts):
 // o cliente só diz de QUAL funil veio o evento, nunca quanto ele vale.
 export const OFFER_VALUE = 47; // funil do quiz
-export const SALES_OFFER_VALUE = 97; // página de vendas
+export const SALES_OFFER_VALUE = 47; // página de vendas
 export const OFFER_CURRENCY = "BRL";
 
 // Valor autoritativo por funil — a única fonte que o Route Handler consulta.

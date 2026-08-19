@@ -17,7 +17,7 @@ import { PostScriptum } from "@/components/sales/sections/PostScriptum";
 import { Rodape } from "@/components/sales/sections/Rodape";
 
 // ============================================================
-// ROTA / · PÁGINA DE VENDAS (long-form, texto puro, sem VSL) — R$ 97
+// ROTA / · PÁGINA DE VENDAS (long-form, texto puro, sem VSL) — R$ 47
 //
 // Assumiu a raiz em 14/08/2026; o funil de quiz mudou pra /quiz.
 //

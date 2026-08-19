@@ -74,8 +74,8 @@ export function getParams(): Record<string, string> {
 // Anexa os parâmetros capturados a uma URL de checkout.
 //
 // ⚠️ Usa `searchParams.set`, que PRESERVA a query que já existe na base — é o
-// que mantém o `?off=` da oferta de R$ 97 intacto. Sem esse cuidado a pessoa
-// leria R$ 97 na página e cairia no checkout de R$ 47 (mesmo produto Hotmart,
+// que mantém o `?off=` da oferta da página intacto. Sem esse cuidado a venda
+// cairia na oferta errada do checkout (mesmo produto Hotmart,
 // ofertas diferentes).
 export function withParams(
   baseUrl: string,

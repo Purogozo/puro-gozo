@@ -84,7 +84,7 @@ export function Cta({
       href={href}
       onClick={handleClick}
       // inline-block + text-center (e NÃO flex): os rótulos longos ("Quero
-      // acesso ao Puro Gozo — R$ 97") quebram em duas linhas em 360px, e com
+      // acesso ao Puro Gozo — R$ 47") quebram em duas linhas em 360px, e com
       // flex a seta ficava órfã, empurrada pro canto. Assim ela flui logo
       // depois da última palavra, sem nunca quebrar sozinha.
       className={`group relative inline-block rounded-full bg-rose px-7 py-4 text-center font-sans text-[0.78rem] font-medium uppercase leading-[1.45] tracking-[0.14em] text-white transition-transform duration-300 active:scale-[0.97] sm:px-10 sm:text-[0.85rem] ${
