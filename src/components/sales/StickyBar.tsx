@@ -13,7 +13,24 @@ const APARECE_APOS = 350; // px de scroll (definido no handoff de design)
 // É o único CTA que não tem um lado fixo na página: ele acompanha a leitura.
 // Por isso o destino é decidido em tempo real pela mesma regra das seções —
 // antes da oferta rola até ela, depois dela vai direto pro checkout.
-export function StickyBar() {
+//
+// Props (15/09/2026): a barra serve também a /pg-vsl-a. Sem props ela mostra a
+// oferta da página / (COPY.sticky), como sempre fez.
+export function StickyBar({
+  label = COPY.sticky.label,
+  de = COPY.sticky.de,
+  preco = COPY.sticky.preco,
+  garantia = "30 dias de garantia",
+  cta = COPY.sticky.cta,
+  funnel = "vendas",
+}: {
+  label?: string;
+  de?: string;
+  preco?: string;
+  garantia?: string;
+  cta?: string;
+  funnel?: "vendas" | "metodo";
+} = {}) {
   const [passouDobra, setPassouDobra] = useState(false);
   const [ofertaVisivel, setOfertaVisivel] = useState(false);
   const [passouOferta, setPassouOferta] = useState(false);
@@ -60,23 +77,24 @@ export function StickyBar() {
       <div className="mx-auto flex max-w-4xl items-center justify-between gap-3 px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-6">
         <div className="min-w-0 leading-tight">
           <p className="truncate font-serif text-[0.95rem] text-marfim sm:text-[1.05rem]">
-            {COPY.sticky.label}
+            {label}
           </p>
           <p className="truncate font-sans text-[0.72rem] text-nevoa sm:text-[0.78rem]">
-            <span className="line-through">{COPY.sticky.de}</span>{" "}
-            <span className="text-marfim">{COPY.sticky.preco}</span>
+            <span className="line-through">{de}</span>{" "}
+            <span className="text-marfim">{preco}</span>
             {/* em 360px a menção à garantia quebrava a linha e engordava a
                 barra; ela já aparece no botão da seção de oferta */}
-            <span className="hidden sm:inline"> · 30 dias de garantia</span>
+            <span className="hidden sm:inline"> · {garantia}</span>
           </p>
         </div>
         <Cta
           position={passouOferta ? "sticky-pos-oferta" : "sticky-pre-oferta"}
           to={passouOferta ? "checkout" : "oferta"}
+          funnel={funnel}
           full={false}
           className="shrink-0 !px-5 !py-3 !text-[0.7rem] sm:!px-7"
         >
-          {COPY.sticky.cta}
+          {cta}
         </Cta>
       </div>
     </div>

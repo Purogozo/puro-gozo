@@ -24,6 +24,17 @@ export const SALES_CHECKOUT_URL =
   process.env.NEXT_PUBLIC_SALES_CHECKOUT_URL ??
   "https://pay.hotmart.com/R106650092U?off=71azdo8z&checkoutMode=10";
 
+// Checkout da PÁGINA /pg-vsl-a — oferta de R$ 297 (12x de R$ 30,72, âncora
+// R$ 697), off=rp7h9z5a, entregue pelo cliente em 16/09/2026. Terceira oferta
+// do MESMO produto R106650092U — como nas outras duas, é o `off` que decide
+// em qual oferta a venda cai. `&checkoutMode=10` = checkout de página única,
+// o mesmo padrão adotado na / em 18/08.
+// Se a URL ficar vazia (env sobrescrevendo com ""), os botões de checkout
+// levam só até #oferta e NÃO disparam InitiateCheckout (ver Cta.tsx).
+export const METODO_CHECKOUT_URL =
+  process.env.NEXT_PUBLIC_METODO_CHECKOUT_URL ??
+  "https://pay.hotmart.com/R106650092U?off=rp7h9z5a&checkoutMode=10";
+
 // Endpoint de analytics (screen_view, option_select, etc.) → Supabase.
 // Default aponta pra rota interna: em produção funciona sem env nenhuma.
 // Defina como "" pra desligar a ingestão (eventos vão pro console em dev).
@@ -39,12 +50,14 @@ export const META_PIXEL_ID =
 // o cliente só diz de QUAL funil veio o evento, nunca quanto ele vale.
 export const OFFER_VALUE = 47; // funil do quiz
 export const SALES_OFFER_VALUE = 47; // página de vendas
+export const METODO_OFFER_VALUE = 297; // página /pg-vsl-a (à vista; era 197 até 16/09/2026)
 export const OFFER_CURRENCY = "BRL";
 
 // Valor autoritativo por funil — a única fonte que o Route Handler consulta.
 export const FUNNEL_VALUE = {
   quiz: OFFER_VALUE,
   vendas: SALES_OFFER_VALUE,
+  metodo: METODO_OFFER_VALUE,
 } as const;
 
 export type Funnel = keyof typeof FUNNEL_VALUE;

@@ -149,7 +149,8 @@ export function getFbp(): string | undefined {
 // monetário autoritativo — o mesmo produto tem duas ofertas (quiz R$ 47,
 // página de vendas) e mandar o valor errado envenena a otimização.
 // É um rótulo fechado, não um número: o cliente não consegue forjar preço.
-export type Funnel = "quiz" | "vendas";
+// "metodo" = a página /pg-vsl-a (R$ 297), desde 15/09/2026.
+export type Funnel = "quiz" | "vendas" | "metodo";
 
 // Envia o evento pra CAPI (servidor) com o mesmo event_id do Pixel + os sinais
 // de correspondência que o servidor sozinho não tem (external_id, fbp, fbc).

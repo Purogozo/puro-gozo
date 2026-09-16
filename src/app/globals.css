@@ -277,6 +277,23 @@ body {
   }
 }
 
+/* Delay da VSL (/pg-vsl-a) — ver components/metodo/VslDelay.tsx.
+   Tudo marcado com data-vsl-delay nasce escondido e só aparece quando o
+   <html> ganha .vsl-revealed (vídeo passou do ponto, ou visita repetida).
+   `revert` devolve o display padrão de cada elemento (div/section/footer). */
+[data-vsl-delay] {
+  display: none;
+}
+html.vsl-revealed [data-vsl-delay] {
+  display: revert;
+}
+/* Enquanto só o vídeo está visível, o fundo da página é branco (o da seção
+   da VSL) em vez de terminar numa faixa marfim vazia. O :has restringe a
+   regra às páginas que têm delay — nas outras rotas não muda nada. */
+html:not(.vsl-revealed):has([data-vsl-delay]) body {
+  background: #fff;
+}
+
 /* Entrada da sticky bar de oferta */
 @keyframes bar-in {
   from {

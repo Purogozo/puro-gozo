@@ -1,8 +1,9 @@
 "use client";
 
 import type { MouseEvent } from "react";
-import { SALES_CHECKOUT_URL } from "@/lib/config";
-import { buildCheckoutUrl, trackEvent } from "@/lib/sales-tracking";
+import { METODO_CHECKOUT_URL, SALES_CHECKOUT_URL } from "@/lib/config";
+import * as vendas from "@/lib/sales-tracking";
+import * as metodo from "@/lib/metodo-tracking";
 
 // ÚNICO elemento da página que usa a cor de ação (rosé). Nenhum ícone, selo
 // ou numeral pode repetir essa cor — é o que faz o botão ser a única coisa
@@ -19,10 +20,21 @@ import { buildCheckoutUrl, trackEvent } from "@/lib/sales-tracking";
 //
 // Por isso a prop é obrigatória: seção nova precisa decidir de que lado da
 // oferta ela está. Ver o mapa de seções no topo de src/app/page.tsx.
+//
+// `funnel` (15/09/2026): o mesmo botão serve a página / ("vendas", padrão) e
+// a /pg-vsl-a ("metodo"). Cada funil tem o seu checkout, o seu valor e o seu
+// módulo de tracking — o botão só escolhe qual usa.
+
+const FUNIS = {
+  vendas: { checkout: SALES_CHECKOUT_URL, ...vendas },
+  metodo: { checkout: METODO_CHECKOUT_URL, ...metodo },
+} as const;
+
 export function Cta({
   children,
   position,
   to,
+  funnel = "vendas",
   full = true,
   pulse = false,
   className = "",
@@ -32,13 +44,17 @@ export function Cta({
   position: string;
   /** "oferta" = rola até #oferta · "checkout" = vai pro Hotmart */
   to: "oferta" | "checkout";
+  /** de qual página é o botão — decide checkout, valor e tracking */
+  funnel?: keyof typeof FUNIS;
   full?: boolean;
   pulse?: boolean;
   className?: string;
 }) {
+  const f = FUNIS[funnel];
+
   // Fallback do SSR: sem link de checkout configurado, o botão ao menos leva
   // até a oferta em vez de virar um clique morto.
-  const href = to === "oferta" ? "#oferta" : SALES_CHECKOUT_URL || "#oferta";
+  const href = to === "oferta" ? "#oferta" : f.checkout || "#oferta";
 
   function handleClick(e: MouseEvent<HTMLAnchorElement>) {
     // deixa o navegador cuidar de abrir em nova aba / nova janela
@@ -49,7 +65,7 @@ export function Cta({
       // sujar o InitiateCheckout (evento que o Meta otimiza) com rolagem
       // interna estragaria a otimização. O cta_position continua vindo, então
       // ainda dá pra ranquear qual seção empurra pra oferta.
-      trackEvent("oferta_click", { cta_position: position });
+      f.trackEvent("oferta_click", { cta_position: position });
 
       // Nada de e.preventDefault(): o salto nativo do href="#oferta" é o que
       // leva até a seção. Só medimos e saímos da frente.
@@ -63,17 +79,19 @@ export function Cta({
       return;
     }
 
-    trackEvent("checkout_click", { cta_position: position });
-
-    const url = buildCheckoutUrl();
+    const url = f.buildCheckoutUrl();
     if (!url) {
+      // Sem checkout configurado não há InitiateCheckout: o clique vira o
+      // salto pra #oferta do href e não suja o evento que o Meta otimiza.
       if (process.env.NODE_ENV !== "production") {
         console.warn(
-          "[cta] NEXT_PUBLIC_SALES_CHECKOUT_URL não configurado — ver src/lib/config.ts"
+          `[cta] checkout do funil "${funnel}" não configurado — ver src/lib/config.ts`
         );
       }
-      return; // segue pro #oferta do href
+      return;
     }
+
+    f.trackEvent("checkout_click", { cta_position: position });
 
     e.preventDefault();
     window.location.href = url;

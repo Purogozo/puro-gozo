@@ -4,6 +4,8 @@
 | --- | --- | --- | --- |
 | `/` | **Página de vendas** long-form, 14 seções, texto puro | R$ 47 | `R106650092U?off=71azdo8z&checkoutMode=10` |
 | `/quiz` | **Funil de quiz** de 20 telas | R$ 47 | `R106650092U` |
+| `/pg-vsl-ab` | **Roteador A/B** (proxy.ts): sorteia uma variante, grava cookie `pg_vsl_ab` e redireciona pra `/pg-vsl-<x>` preservando UTMs. Override `?v=a`. Variantes em `src/lib/vsl-ab.ts` | — | — |
+| `/pg-vsl-a` | **Variante A** — página de vendas long-form com VSL (VTurb) e imagens, 21 blocos (15/09/2026) | R$ 297 (12x R$ 30,72, âncora R$ 697) | `R106650092U?off=rp7h9z5a&checkoutMode=10` |
 
 ⚠️ **Mudou em 14/08/2026.** O quiz ficava na raiz; a página de vendas assumiu o
 `/` e o quiz foi pra `/quiz`. **Todo anúncio que apontava pra raiz precisa
