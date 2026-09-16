@@ -1,9 +1,18 @@
-import Script from "next/script";
-
 // VSL do bloco 0 — player do VTurb (converteai), entregue pelo cliente em
 // 16/09/2026. O embed original era um <vturb-smartplayer> + um <script>
-// inline que injeta o player.js no <head>; aqui o script entra pelo
-// next/script (afterInteractive), que faz a mesma coisa sem script inline.
+// inline que injeta o player.js no <head>.
+//
+// PERFORMANCE (Lighthouse de 16/09/2026, Moto G / 4G lento: LCP 8,8 s com
+// "atraso no carregamento do recurso" de 3,1 s). O vídeo É o LCP da página,
+// e o player só nasce depois que o player.js roda. Na primeira versão o
+// script entrava por next/script afterInteractive — ou seja, só depois da
+// hidratação do React, que num celular fraco leva segundos. Agora:
+//  - o <script async src> é renderizado direto no JSX: o React 19 iça pra
+//    <head> e o preload scanner do navegador descobre a URL no parse do
+//    HTML, em paralelo com o CSS e os chunks do Next (é o que o embed
+//    original do VTurb fazia);
+//  - <link rel="preconnect"> pras origens do VTurb (script, CDN do vídeo e
+//    licença), que o Lighthouse apontou como ~300 ms cada de handshake.
 //
 // O player dita a PRÓPRIA altura: o player.js injeta um div com
 // padding-top de 133,33% (vídeo 3:4, vertical). Medido em 16/09: forçar a
@@ -34,11 +43,16 @@ declare module "react" {
 export function Vsl({ id, script }: { id: string; script: string }) {
   return (
     <div className="mx-auto w-full max-w-[28rem]">
+      <link rel="preconnect" href="https://scripts.converteai.net" />
+      <link rel="preconnect" href="https://cdn.converteai.net" />
+      <link rel="preconnect" href="https://license.vturb.com" />
+      <link rel="dns-prefetch" href="https://images.converteai.net" />
       <vturb-smartplayer
         id={id}
         style={{ display: "block", margin: "0 auto", width: "100%" }}
       />
-      <Script src={script} strategy="afterInteractive" />
+      {/* async + src: o React 19 iça pro <head> e deduplica */}
+      <script async src={script} />
     </div>
   );
 }

@@ -55,10 +55,12 @@ export function Callout() {
         </div>
 
         <div className="mx-auto w-full max-w-sm lg:max-w-none">
+          {/* SEM priority: com o delay da VSL esta cena fica escondida até
+              14:20, e o `priority` gerava um <link rel=preload> de 109 KB
+              disputando banda com o vídeo (o LCP) logo no parse. */}
           <Foto
             src={c.img.src}
             alt={c.img.alt}
-            priority
             className="shadow-[0_30px_80px_-40px_rgba(30,31,58,0.55)]"
           />
         </div>

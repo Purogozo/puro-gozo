@@ -79,19 +79,32 @@ export default function RootLayout({
       className={`${playfair.variable} ${jost.variable} h-full antialiased`}
     >
       <head>
-        {/* Meta Pixel Code */}
+        {/* Meta Pixel Code — em duas partes (16/09/2026, performance).
+            O snippet oficial cria o stub `fbq` (uma fila) E injeta o
+            fbevents.js na hora. Aqui o stub continua cedo (afterInteractive):
+            init + PageView + tudo que tracking.ts/sales-tracking.ts disparar
+            entram na fila. Só o DOWNLOAD do fbevents.js (~250 KiB com o
+            config do pixel) foi pra depois do evento `load` (lazyOnload) —
+            quando carrega, ele processa a fila e envia tudo com os mesmos
+            event_id que a CAPI já recebeu. Motivo: Lighthouse com TBT de
+            520 ms num Moto G, e esse script executava dentro da janela que
+            o LCP/TBT medem. Custo: quem fecha a aba ANTES do load não gera
+            PageView no Pixel (a CAPI segue recebendo ViewContent do
+            servidor). Pra voltar ao comportamento antigo, é só trocar
+            lazyOnload por afterInteractive no <Script src> abaixo. */}
         <Script id="meta-pixel" strategy="afterInteractive">
-          {`!function(f,b,e,v,n,t,s)
-{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+          {`!function(f,n){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
 n.callMethod.apply(n,arguments):n.queue.push(arguments)};
 if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-n.queue=[];t=b.createElement(e);t.async=!0;
-t.src=v;s=b.getElementsByTagName(e)[0];
-s.parentNode.insertBefore(t,s)}(window, document,'script',
-'https://connect.facebook.net/en_US/fbevents.js');
+n.queue=[]}(window);
 fbq('init', '${META_PIXEL_ID}');
 fbq('track', 'PageView');`}
         </Script>
+        <Script
+          id="meta-pixel-lib"
+          src="https://connect.facebook.net/en_US/fbevents.js"
+          strategy="lazyOnload"
+        />
         {/* End Meta Pixel Code */}
       </head>
       <body className="min-h-full">
