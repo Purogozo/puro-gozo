@@ -30,6 +30,13 @@ export const METODO = {
     // Delay: tudo abaixo do vídeo (inclusive o preço/botão abaixo) só
     // aparece quando o vídeo passa deste ponto. 14:20 = 860s.
     delaySeconds: 14 * 60 + 20,
+    // Headline ACIMA do player (pedido em 21/09/2026, do benchmark das
+    // escaladas): promessa de identidade + relógio + reação dele. Duas
+    // linhas por tipografia — `headline` é o h1, `subline` a frase de apoio.
+    // NÃO tem delay: é a primeira coisa que ela lê.
+    headline: "O seu tesão não morreu. Foi desligado.",
+    subline:
+      "Em 30 dias você religa ele e volta a ser você. E ele vai perceber antes de você contar.",
     eyebrow: "Somente agora",
     precoDe: "De",
     precoPor: "por 12x",

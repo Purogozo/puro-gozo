@@ -20,7 +20,18 @@ export function VslTopo() {
       <header className="text-center">
         <Logo className="text-[1.35rem] sm:text-[1.6rem]" />
       </header>
-      <div className="mx-auto mt-8 w-full max-w-3xl sm:mt-10">
+
+      {/* Headline acima do player (21/09/2026) — sem delay, é o que ela lê primeiro. */}
+      <div className="mx-auto mt-7 max-w-2xl text-center sm:mt-9">
+        <h1 className="font-serif text-[1.85rem] font-bold leading-[1.16] text-indigo sm:text-[2.5rem] lg:text-[2.8rem] lg:leading-[1.1]">
+          {vsl.headline}
+        </h1>
+        <p className="mx-auto mt-4 max-w-xl text-[1.05rem] leading-relaxed text-tinta/85 sm:text-[1.2rem]">
+          {vsl.subline}
+        </p>
+      </div>
+
+      <div className="mx-auto mt-7 w-full max-w-3xl sm:mt-9">
         <Vsl id={vsl.id} script={vsl.script} />
       </div>
 

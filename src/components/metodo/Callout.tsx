@@ -26,9 +26,10 @@ export function Callout() {
 
       <div className="mx-auto grid w-full max-w-6xl items-center gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:gap-16">
         <div>
-          <h1 className="font-serif text-[1.85rem] font-bold leading-[1.16] text-indigo sm:text-[2.5rem] lg:text-[2.8rem] lg:leading-[1.1]">
+          {/* h2: o h1 da página passou a ser a headline acima da VSL (VslTopo, 21/09/2026). Estilo mantido. */}
+          <h2 className="font-serif text-[1.85rem] font-bold leading-[1.16] text-indigo sm:text-[2.5rem] lg:text-[2.8rem] lg:leading-[1.1]">
             {c.h1}
-          </h1>
+          </h2>
 
           <p className="mt-8 font-sans text-[1.02rem] font-light leading-[1.75] text-tinta/75 sm:text-[1.1rem]">
             {c.intro}
