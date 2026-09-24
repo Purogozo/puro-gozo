@@ -24,7 +24,7 @@ import { VSL_REVEAL_CLASS, VSL_REVEAL_KEY } from "@/lib/vsl-delay";
 // página fica só com o vídeo. Decisão consciente — um fallback entregaria
 // a oferta a quem nem viu a VSL (e a qualquer revisor de anúncio).
 //
-// Pra REVISAR a página inteira sem esperar 14:20: abrir com `?revelar=1`
+// Pra REVISAR a página inteira sem esperar 13:10: abrir com `?revelar=1`
 // (grava a flag e revela na hora). Só serve pra conferência interna.
 // ============================================================
 

@@ -84,7 +84,7 @@ import { Rodape } from "@/components/metodo/Rodape";
 //
 // DELAY DA VSL (16/09/2026): tudo abaixo do vídeo — preço/botão da seção 0,
 // seções 1–21, rodapé e sticky bar — fica escondido (`data-vsl-delay`) até o
-// vídeo passar de 14:20. Ver components/metodo/VslDelay.tsx. Pra revisar a
+// vídeo passar de 13:10. Ver components/metodo/VslDelay.tsx. Pra revisar a
 // página inteira sem esperar: `?revelar=1`.
 //
 // ⚠️ Mesmo alerta da /: esta página é SSR de copy crua no domínio limpo
@@ -127,7 +127,7 @@ export default function PgVslAPage() {
 
       <main>
         <VslTopo />
-        {/* ── daqui pra baixo: escondido até 14:20 de vídeo ── */}
+        {/* ── daqui pra baixo: escondido até 13:10 de vídeo ── */}
         <div data-vsl-delay>
           <Callout />
           <Dor />

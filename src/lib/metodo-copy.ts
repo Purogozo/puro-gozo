@@ -28,8 +28,8 @@ export const METODO = {
     // ⚠️ Este botão vai DIRETO pro checkout mesmo estando acima da oferta —
     // exceção explícita do cliente à regra "acima da oferta = âncora".
     // Delay: tudo abaixo do vídeo (inclusive o preço/botão abaixo) só
-    // aparece quando o vídeo passa deste ponto. 14:20 = 860s.
-    delaySeconds: 14 * 60 + 20,
+    // aparece quando o vídeo passa deste ponto. 13:10 = 790s.
+    delaySeconds: 13 * 60 + 10,
     // Headline ACIMA do player (pedido em 21/09/2026, do benchmark das
     // escaladas): promessa de identidade + relógio + reação dele. Duas
     // linhas por tipografia — `headline` é o h1, `subline` a frase de apoio.

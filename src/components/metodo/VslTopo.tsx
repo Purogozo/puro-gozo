@@ -11,7 +11,7 @@ import { Logo } from "@/components/brand/Logo";
 // checkout — exceção pedida pelo cliente em 16/09/2026 à regra dos CTAs
 // acima da oferta. O bloco 1 continua intacto logo abaixo.
 // O preço/botão (e tudo dali pra baixo) tem DELAY: só aparece depois de
-// 14:20 de vídeo — ver VslDelay.tsx.
+// 13:10 de vídeo — ver VslDelay.tsx.
 export function VslTopo() {
   const { vsl, oferta } = METODO;
 
@@ -35,7 +35,7 @@ export function VslTopo() {
         <Vsl id={vsl.id} script={vsl.script} />
       </div>
 
-      {/* data-vsl-delay: escondido até o vídeo passar de 14:20 (VslDelay) */}
+      {/* data-vsl-delay: escondido até o vídeo passar de 13:10 (VslDelay) */}
       <div
         data-vsl-delay
         className="mx-auto mt-8 flex w-full max-w-md flex-col items-center text-center sm:mt-10"
