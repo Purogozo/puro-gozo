@@ -20,6 +20,15 @@ import { VSL_REVEAL_CLASS, VSL_REVEAL_KEY } from "@/lib/vsl-delay";
 // não depende de nada além do getter. Se por acaso o getter vier 0 (player
 // antigo), tentamos o <hls-video> dentro do shadow root.
 //
+// PITCH DO VTURB (26/09/2026): o ponto de liberação é o "pitch time"
+// configurado no painel do VTurb (`el.config.pitchTime`, lido ao vivo —
+// mudou no painel, a página acompanha sem deploy). `delaySeconds` só vale
+// se o player não expuser o pitch. Também escutamos o evento `pitch:time`
+// que o próprio player dispara ao cruzar o pitch (mesma régua).
+// Velocidade (Turbo 1.1x): tanto o pitch quanto o `currentTime` são tempo
+// do CONTEÚDO, não do relógio — com 1.1x o pitch chega ~9% mais cedo em
+// tempo real, mas no mesmo ponto do roteiro. Não dividir por 1.1.
+//
 // ⚠️ Não há fallback por tempo de página: se o player não carregar, a
 // página fica só com o vídeo. Decisão consciente — um fallback entregaria
 // a oferta a quem nem viu a VSL (e a qualquer revisor de anúncio).
@@ -32,6 +41,7 @@ const POLL_MS = 500;
 
 type PlayerEl = HTMLElement & {
   currentTime?: number;
+  config?: { pitchTime?: number };
   renderRoot?: ShadowRoot | HTMLElement;
 };
 
@@ -46,6 +56,12 @@ function readTime(el: PlayerEl): number {
     /* shadow root fechado ou player diferente — segue no 0 */
   }
   return 0;
+}
+
+// Pitch do painel do VTurb; sem ele, o valor fixo da copy.
+function pitchOf(el: PlayerEl, fallback: number): number {
+  const p = Number(el.config?.pitchTime);
+  return Number.isFinite(p) && p > 0 ? p : fallback;
 }
 
 export function reveal() {
@@ -72,15 +88,27 @@ export function VslDelay({ delaySeconds }: { delaySeconds: number }) {
       /* segue pro polling */
     }
 
+    let el: PlayerEl | null = null;
+    const done = () => {
+      reveal();
+      window.clearInterval(id);
+      el?.removeEventListener("pitch:time", done);
+    };
     const id = window.setInterval(() => {
-      const el = document.querySelector("vturb-smartplayer") as PlayerEl | null;
-      if (!el) return;
-      if (readTime(el) >= delaySeconds) {
-        reveal();
-        window.clearInterval(id);
+      const cur = document.querySelector("vturb-smartplayer") as PlayerEl | null;
+      if (!cur) return;
+      if (cur !== el) {
+        // o player.js pode trocar o elemento (id ab-… vira vid-…)
+        el?.removeEventListener("pitch:time", done);
+        el = cur;
+        el.addEventListener("pitch:time", done);
       }
+      if (readTime(el) >= pitchOf(el, delaySeconds)) done();
     }, POLL_MS);
-    return () => window.clearInterval(id);
+    return () => {
+      window.clearInterval(id);
+      el?.removeEventListener("pitch:time", done);
+    };
   }, [delaySeconds]);
 
   return null;

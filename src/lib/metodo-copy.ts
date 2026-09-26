@@ -28,7 +28,9 @@ export const METODO = {
     // ⚠️ Este botão vai DIRETO pro checkout mesmo estando acima da oferta —
     // exceção explícita do cliente à regra "acima da oferta = âncora".
     // Delay: tudo abaixo do vídeo (inclusive o preço/botão abaixo) só
-    // aparece quando o vídeo passa deste ponto. 13:10 = 790s.
+    // aparece quando o vídeo passa do PITCH configurado no painel do VTurb
+    // (26/09/2026). Este valor (13:10 = 790s) é só o fallback, se o player
+    // não expuser o pitch. Pra mudar o momento: mude o pitch no VTurb.
     delaySeconds: 13 * 60 + 10,
     // Headline ACIMA do player (pedido em 21/09/2026, do benchmark das
     // escaladas): promessa de identidade + relógio + reação dele. Duas
